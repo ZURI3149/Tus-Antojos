@@ -1,0 +1,41 @@
+# Documentos de especificación y planificación (locales, no se versionan)
+SPEC.md
+specs/
+tasks/
+
+# Dependencias y builds
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.turbo/
+
+# Entorno (solo se versionan los .env.example)
+.env
+.env.*
+!.env.example
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+supabase/signing_keys.json
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Logs y sistema
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Temporales
+*.tmp
+.database.types.gen.ts

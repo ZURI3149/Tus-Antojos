@@ -4,6 +4,9 @@ La empresa “Tus Antojos” necesita mejorar la administración de sus operacio
 
 Sistema de punto de venta y gestión: caja (con modo sin conexión), pantalla de cocina en tiempo real, inventario tipo kardex basado en recetas, pagos en efectivo y QR, tickets térmicos y reportes.
 
+grupo  conformado por 5 personas que nos ayudará a distribuir mejor la organización de responsabilidades, mantener una comunicación directa y reducir la complejidad de desarrollo por esta razón se considera el uso de un arquitectura monolito modular, que permitirá organizar la plataforma en módulos funcionales con responsabilidades definidas. Esta estructura facilitará el mantenimiento, las pruebas y la incorporación de nuevas funcionalidades, como promociones, pagos digitales y reportes administrativos.
+
+
 > Estado: módulo **platform** (base del sistema: monorepo, autenticación por roles, usuarios, CI y despliegue). Caja, cocina e inventario están en construcción.
 
 ## Stack

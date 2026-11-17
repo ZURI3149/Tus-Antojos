@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router/dom';
 import { toast } from 'sonner';
 import { AppProviders, type AppServices } from './app/providers';
+import { PwaUpdater } from './app/PwaUpdater';
 import { createAppRouter } from './app/router';
 import { createProfileFetcher } from './features/auth/profile';
 import { createApiClient } from './lib/api-client';
@@ -36,6 +37,7 @@ createRoot(root).render(
   <StrictMode>
     <AppProviders services={services}>
       <RouterProvider router={router} />
+      <PwaUpdater />
     </AppProviders>
   </StrictMode>,
 );

@@ -17,6 +17,11 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// jsdom no implementa la captura de puntero; Sonner la usa al tocar un toast (p. ej. sus botones).
+Element.prototype.setPointerCapture ??= vi.fn();
+Element.prototype.releasePointerCapture ??= vi.fn();
+Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+
 afterEach(() => {
   cleanup();
 });

@@ -96,6 +96,46 @@ Para un proyecto universitario (y para un negocio pequeño), mantener **un solo 
 | `apps/web/index.html`             | `theme-color`, íconos y etiquetas para iOS                                          |
 | `apps/web/vercel.json`            | Evita que `sw.js`, `index.html` y el manifest queden cacheados; permisos USB/serial |
 
+### 1. Manifest
+
+Lo genera `vite-plugin-pwa` al compilar (`dist/manifest.webmanifest`) a partir del bloque `manifest` de `apps/web/vite.config.ts`; no se edita a mano.
+
+- `name` / `short_name`: «Tus Antojos»; idioma `es`; `id`, `start_url` y `scope` en `/`.
+- `display: 'standalone'`: se abre en su propia ventana, sin barra de direcciones.
+- `orientation: 'any'`: sirve en PC y en tablet en cualquier posición.
+- `theme_color: '#171717'` y `background_color: '#ffffff'`.
+- Íconos de 64, 192 y 512 px, más uno _maskable_ de 512 (Android lo recorta en círculo o en cuadrado redondeado). Se generan desde `public/logo.svg` con `pnpm pwa:icons`.
+- `index.html` enlaza el manifest y además trae `theme-color`, `apple-touch-icon` y las etiquetas de iOS.
+
+### 2. Service worker
+
+Lo genera Workbox (modo `generateSW`) con el bloque `workbox` de `apps/web/vite.config.ts`.
+
+- **Precache:** guarda todo el build (`js`, `css`, `html`, íconos y fuentes), así la app abre sin conexión.
+- **`navigateFallback: 'index.html'`:** sin red, cualquier ruta (`/caja`, `/admin/...`) abre la app y React Router decide qué mostrar.
+- **Fotos del catálogo** (`/storage/v1/object/public/`): se guardan con la estrategia _StaleWhileRevalidate_, que muestra la foto guardada y la actualiza por detrás (hasta 300 fotos y 30 días).
+- **No se guardan en caché** la API ni Supabase (login, datos, tiempo real), a propósito: mostrarían información vieja. Los pedidos sin conexión irán por una cola en IndexedDB (módulo `offline-print`), no por el service worker.
+- `cleanupOutdatedCaches` borra las cachés de versiones anteriores y `clientsClaim` hace que la versión nueva tome el control en cuanto se activa.
+- **Registro:** `registerType: 'prompt'`; lo registra `src/app/PwaUpdater.tsx` con `useRegisterSW`. La app nunca se actualiza sola.
+- **Apagado en `pnpm dev`** (`devOptions.enabled: false`) para no trabajar con cachés viejas.
+- **En Vercel**, `vercel.json` hace que `sw.js`, `index.html` y el manifest no se cacheen, así las versiones nuevas llegan enseguida.
+
+### 3. Avisos (toasts)
+
+Están en `src/app/PwaUpdater.tsx` y usan los toasts de Sonner.
+
+- **Versión nueva:** un aviso fijo, «Hay una nueva versión de Tus Antojos», con los botones **Actualizar** y **Más tarde**. Nunca recarga solo, para no perder una venta a medias.
+- **Lista para usar sin conexión:** «La app ya funciona sin conexión.», la primera vez que termina de guardar todo.
+- **Revisión cada hora** de si hay versión nueva, porque la caja y la cocina pasan el día abiertas. Si no hay red (`navigator.onLine`), no consulta.
+
+### 4. Lo que todavía no existe
+
+- **Hook de red** (`useOnlineStatus`, que escucharía los eventos `online` y `offline` del navegador): hoy la app no avisa si se cae la conexión.
+- **Banner de «Sin conexión».**
+- **Botón propio «Instalar app»** (capturar el evento `beforeinstallprompt`): hoy se instala solo desde el ícono o el menú del navegador.
+
+El SPEC deja el hook de red y el banner para el módulo `offline-print`, junto con la cola de pedidos, porque la caja los usa para saber que sin red solo se cobra en efectivo. El botón de instalar no está asignado a ningún módulo.
+
 ---
 
 ## Cómo probarla

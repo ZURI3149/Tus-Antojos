@@ -1,21 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CreateUser, UpdateUser, User } from '@tus-antojos/shared';
 import { toast } from 'sonner';
-import { ApiError } from '@/lib/api-client';
 import { useApi } from '@/lib/api-context';
+import { notifyError } from '@/lib/notify-error';
 
 const usersKey = ['users'] as const;
 
-/** 401 y 403 ya los avisa el cliente HTTP; el resto se muestra aquí. */
-export function notifyError(error: unknown): void {
-  if (
-    error instanceof ApiError &&
-    (error.code === 'UNAUTHENTICATED' || error.code === 'FORBIDDEN')
-  ) {
-    return;
-  }
-  toast.error(error instanceof Error ? error.message : 'Ocurrió un error inesperado');
-}
+export { notifyError };
 
 export function useUsers() {
   const api = useApi();

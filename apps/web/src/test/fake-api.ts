@@ -2,6 +2,7 @@ import type { User } from '@tus-antojos/shared';
 import { vi } from 'vitest';
 import { ApiError, type ApiClient } from '@/lib/api-client';
 import { TEST_USERS } from './fake-auth';
+import { createFakeCatalog, NOT_HANDLED, type FakeCatalog } from './fake-catalog';
 
 export function seedUsers(): User[] {
   return (Object.keys(TEST_USERS) as (keyof typeof TEST_USERS)[]).map((role) => ({
@@ -15,8 +16,14 @@ export function seedUsers(): User[] {
   }));
 }
 
-/** API falsa en memoria para /users, con el mismo contrato que createApiClient. */
-export function createFakeApi(users: User[] = seedUsers()) {
+/**
+ * API falsa en memoria (/users y, vía `catalog`, las rutas del catálogo), con el mismo
+ * contrato que createApiClient. El catálogo comparte datos con su lector falso.
+ */
+export function createFakeApi(
+  users: User[] = seedUsers(),
+  catalog: FakeCatalog = createFakeCatalog(),
+) {
   const queue: ApiError[] = [];
   const handle = vi.fn(async (method: string, path: string, body?: unknown): Promise<unknown> => {
     const next = queue.shift();
@@ -43,6 +50,8 @@ export function createFakeApi(users: User[] = seedUsers()) {
       Object.assign(user, body);
       return structuredClone(user);
     }
+    const fromCatalog = catalog.handle(method, path, body);
+    if (fromCatalog !== NOT_HANDLED) return fromCatalog;
     throw new Error(`Ruta no simulada: ${method} ${path}`);
   });
 
@@ -56,6 +65,7 @@ export function createFakeApi(users: User[] = seedUsers()) {
     api,
     calls: handle,
     users,
+    catalog,
     /** La próxima llamada falla con este error. */
     failNext(error: ApiError) {
       queue.push(error);

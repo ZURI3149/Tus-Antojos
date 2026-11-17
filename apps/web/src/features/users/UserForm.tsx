@@ -11,14 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { ApiError } from '@/lib/api-client';
+import { selectClassName } from '@/lib/utils';
 import { notifyError, useCreateUser } from './api';
 
 const FIELDS = ['email', 'password', 'fullName', 'role'] as const;
 type FieldName = (typeof FIELDS)[number];
 const isField = (path: string): path is FieldName => (FIELDS as readonly string[]).includes(path);
-
-export const selectClassName =
-  'h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive';
 
 export function UserForm({ onDone }: { onDone: () => void }) {
   const createUser = useCreateUser();

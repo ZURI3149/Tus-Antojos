@@ -3,6 +3,107 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      ingredients: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          unit: Database['public']['Enums']['ingredient_unit'];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          unit: Database['public']['Enums']['ingredient_unit'];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          unit?: Database['public']['Enums']['ingredient_unit'];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      products: {
+        Row: {
+          category_id: string;
+          created_at: string;
+          description: string;
+          id: string;
+          image_path: string | null;
+          is_active: boolean;
+          name: string;
+          price_cents: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          category_id: string;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          image_path?: string | null;
+          is_active?: boolean;
+          name: string;
+          price_cents: number;
+          updated_at?: string;
+        };
+        Update: {
+          category_id?: string;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          image_path?: string | null;
+          is_active?: boolean;
+          name?: string;
+          price_cents?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'products_category_id_fkey';
+            columns: ['category_id'];
+            isOneToOne: false;
+            referencedRelation: 'categories';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -31,6 +132,40 @@ export type Database = {
         };
         Relationships: [];
       };
+      recipe_items: {
+        Row: {
+          ingredient_id: string;
+          product_id: string;
+          quantity: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          ingredient_id: string;
+          product_id: string;
+          quantity: number;
+        };
+        Update: {
+          ingredient_id?: string;
+          product_id?: string;
+          quantity?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'recipe_items_ingredient_id_fkey';
+            columns: ['ingredient_id'];
+            isOneToOne: false;
+            referencedRelation: 'ingredients';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'recipe_items_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -57,9 +192,22 @@ export type Database = {
         };
         Returns: undefined;
       };
+      create_product: {
+        Args: {
+          p_category_id: string;
+          p_description: string;
+          p_is_active: boolean;
+          p_name: string;
+          p_price_cents: number;
+          p_recipe?: Json;
+        };
+        Returns: string;
+      };
+      set_product_recipe: { Args: { p_items: Json; p_product_id: string }; Returns: undefined };
     };
     Enums: {
       app_role: 'cajero' | 'cocina' | 'admin';
+      ingredient_unit: 'g' | 'ml' | 'unidad';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -172,6 +320,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ['cajero', 'cocina', 'admin'],
+      ingredient_unit: ['g', 'ml', 'unidad'],
     },
   },
 } as const;

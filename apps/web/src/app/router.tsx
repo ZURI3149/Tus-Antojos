@@ -2,6 +2,8 @@ import { APP_ROLES } from '@tus-antojos/shared';
 import { createBrowserRouter, type RouteObject } from 'react-router';
 import { AdminPage } from '@/features/admin/AdminPage';
 import { LoginPage } from '@/features/auth/LoginPage';
+import { CategoriesPage } from '@/features/catalog/CategoriesPage';
+import { IngredientsPage } from '@/features/catalog/IngredientsPage';
 import { KitchenPage } from '@/features/kitchen/KitchenPage';
 import { PosPage } from '@/features/pos/PosPage';
 import { UsersPage } from '@/features/users/UsersPage';
@@ -43,6 +45,8 @@ export const routes: RouteObject[] = [
                 children: [
                   { path: adminSection.path, element: <AdminPage /> },
                   { path: `${adminSection.path}/usuarios`, element: <UsersPage /> },
+                  { path: `${adminSection.path}/categorias`, element: <CategoriesPage /> },
+                  { path: `${adminSection.path}/insumos`, element: <IngredientsPage /> },
                 ],
               },
             ],

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/auth-context';
 import { cn } from '@/lib/utils';
 import { useUpdateUser, useUsers } from './api';
-import { selectClassName, UserForm } from './UserForm';
+import { selectClassName } from '@/lib/utils';
+import { UserForm } from './UserForm';
 
 const dateFormat = new Intl.DateTimeFormat('es', { dateStyle: 'short', timeStyle: 'short' });
 

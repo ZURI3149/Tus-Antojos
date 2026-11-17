@@ -8,6 +8,7 @@ import { buildLoggerParams } from './common/logger.js';
 import { APP_CONFIG, ConfigModule, LOG_DESTINATION } from './config/config.module.js';
 import type { AppConfig } from './config/env.schema.js';
 import { HealthController } from './health/health.controller.js';
+import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { SupabaseModule } from './supabase/supabase.module.js';
 
@@ -22,6 +23,7 @@ import { SupabaseModule } from './supabase/supabase.module.js';
     SupabaseModule,
     AuthModule,
     UsersModule,
+    CatalogModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_FILTER, useClass: HttpExceptionFilter }],

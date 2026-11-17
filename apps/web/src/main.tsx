@@ -6,6 +6,7 @@ import { AppProviders, type AppServices } from './app/providers';
 import { PwaUpdater } from './app/PwaUpdater';
 import { createAppRouter } from './app/router';
 import { createProfileFetcher } from './features/auth/profile';
+import { createSupabaseCatalogReader } from './features/catalog/reader';
 import { createApiClient } from './lib/api-client';
 import { initWebSentry } from './lib/sentry';
 import { getWebEnv } from './lib/env';
@@ -29,6 +30,7 @@ const services: AppServices = {
     onUnauthorized: () => void supabase.auth.signOut({ scope: 'local' }),
     onForbidden: (message) => toast.warning(message),
   }),
+  catalog: createSupabaseCatalogReader(supabase),
 };
 
 const router = createAppRouter();

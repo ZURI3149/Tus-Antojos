@@ -9,7 +9,9 @@ import type { FakeAuth } from './fake-auth';
 export function renderApp(path: string, fake: FakeAuth, fakeApi: FakeApi = createFakeApi()) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
-    <AppProviders services={{ ...fake.services, api: fakeApi.api }}>
+    <AppProviders
+      services={{ ...fake.services, api: fakeApi.api, catalog: fakeApi.catalog.reader }}
+    >
       <RouterProvider router={router} />
     </AppProviders>,
   );

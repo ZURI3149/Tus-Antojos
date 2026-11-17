@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "typecheck": "pnpm build:shared && pnpm -r --if-present run typecheck",
     "test": "pnpm build:shared && pnpm -r --if-present run test",
-    "test:db": "pnpm -r --if-present run test:db",
+    "test:db": "pnpm -r --workspace-concurrency=1 --if-present run test:db",
     "test:e2e": "pnpm -r --if-present run test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

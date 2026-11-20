@@ -37,7 +37,7 @@ describe('createApiClient', () => {
     expect(headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/);
   });
 
-  it('POST, PATCH y PUT envían JSON', async () => {
+  it('POST, PATCH y PUT envían JSON; DELETE va sin cuerpo', async () => {
     const s = setup(jsonResponse(201, { ok: true }));
     await s.api.post('/users', { a: 1 });
     expect(s.lastRequest().init.body).toBe('{"a":1}');
@@ -47,6 +47,9 @@ describe('createApiClient', () => {
     await s.api.put('/products/1/recipe', { items: [] });
     expect(s.lastRequest().init.method).toBe('PUT');
     expect(s.lastRequest().init.body).toBe('{"items":[]}');
+    await s.api.delete('/products/1/image');
+    expect(s.lastRequest().init.method).toBe('DELETE');
+    expect(s.lastRequest().init.body).toBeUndefined();
   });
 
   it('sin sesión no envía Authorization', async () => {

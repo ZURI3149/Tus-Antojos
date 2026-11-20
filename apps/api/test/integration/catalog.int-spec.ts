@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import {
   categorySchema,
   ingredientSchema,
+  PRODUCT_IMAGE_BUCKET,
+  productImageUploadSchema,
   productSchema,
   type Database,
 } from '@tus-antojos/shared';
@@ -356,6 +358,114 @@ describe('catálogo contra Supabase local', () => {
       await asAdmin(http().patch(`/products/${crypto.randomUUID()}`))
         .send({ priceCents: 100 })
         .expect(404);
+    });
+  });
+
+  describe('fotos (CA-08)', () => {
+    const browser = createClient(supabase.apiUrl, supabase.anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const bucket = () => browser.storage.from(PRODUCT_IMAGE_BUCKET);
+    const folderFiles = async (id: string) => {
+      const { data } = await service.storage.from(PRODUCT_IMAGE_BUCKET).list(`products/${id}`);
+      return (data ?? []).map((f) => `products/${id}/${f.name}`);
+    };
+    const webp = (bytes = 1024) => new Blob([new Uint8Array(bytes)], { type: 'image/webp' });
+
+    let productId: string;
+    let otherProductId: string;
+
+    beforeAll(async () => {
+      const { data: category } = await service
+        .from('categories')
+        .insert({ name: `${PREFIX}Fotos` })
+        .select()
+        .single();
+      const { data: products } = await service
+        .from('products')
+        .insert([
+          { category_id: category!.id, name: `${PREFIX}Con foto`, price_cents: 100 },
+          { category_id: category!.id, name: `${PREFIX}Otro`, price_cents: 100 },
+        ])
+        .select();
+      productId = products!.find((p) => p.name.endsWith('Con foto'))!.id;
+      otherProductId = products!.find((p) => p.name.endsWith('Otro'))!.id;
+    });
+
+    afterAll(async () => {
+      const files = [...(await folderFiles(productId)), ...(await folderFiles(otherProductId))];
+      if (files.length) await service.storage.from(PRODUCT_IMAGE_BUCKET).remove(files);
+    });
+
+    /** Pide la URL firmada y sube el archivo como lo hace el navegador. */
+    async function upload(id: string, file: Blob = webp()) {
+      const res = await asAdmin(http().post(`/products/${id}/image-upload`))
+        .send({})
+        .expect(201);
+      const target = productImageUploadSchema.parse(res.body);
+      expect(target.path).toMatch(new RegExp(`^products/${id}/[0-9a-f-]{36}\\.webp$`));
+      const result = await bucket().uploadToSignedUrl(target.path, target.token, file, {
+        contentType: file.type,
+      });
+      return { path: target.path, error: result.error };
+    }
+
+    it('URL firmada de un producto inexistente → 404', async () => {
+      await asAdmin(http().post(`/products/${crypto.randomUUID()}/image-upload`))
+        .send({})
+        .expect(404);
+    });
+
+    it('sube, confirma y la foto queda pública', async () => {
+      const { path, error } = await upload(productId);
+      expect(error).toBeNull();
+      const res = await asAdmin(http().put(`/products/${productId}/image`))
+        .send({ path })
+        .expect(200);
+      expect(res.body.imagePath).toBe(path);
+
+      const url = bucket().getPublicUrl(path).data.publicUrl;
+      expect((await fetch(url)).status).toBe(200);
+    });
+
+    it('reemplazar la foto borra la anterior y las subidas sin confirmar', async () => {
+      const abandoned = await upload(productId);
+      const next = await upload(productId);
+      expect(await folderFiles(productId)).toHaveLength(3);
+
+      await asAdmin(http().put(`/products/${productId}/image`))
+        .send({ path: next.path })
+        .expect(200);
+      expect(await folderFiles(productId)).toEqual([next.path]);
+      expect(abandoned.error).toBeNull();
+    });
+
+    it('una ruta de otro producto → 400', async () => {
+      const { path } = await upload(otherProductId);
+      const res = await asAdmin(http().put(`/products/${productId}/image`))
+        .send({ path })
+        .expect(400);
+      expect(res.body.error.message).toBe('La imagen no pertenece a este producto');
+    });
+
+    it('una ruta que no se subió → 400', async () => {
+      const res = await asAdmin(http().put(`/products/${productId}/image`))
+        .send({ path: `products/${productId}/${crypto.randomUUID()}.webp` })
+        .expect(400);
+      expect(res.body.error.message).toBe('La imagen no se subió');
+    });
+
+    it('el bucket rechaza un archivo de 3 MB y uno que no es imagen', async () => {
+      const big = await upload(productId, webp(3 * 1024 * 1024));
+      expect(big.error).not.toBeNull();
+      const pdf = await upload(productId, new Blob(['%PDF-1.4'], { type: 'application/pdf' }));
+      expect(pdf.error).not.toBeNull();
+    });
+
+    it('DELETE quita la foto y borra los archivos', async () => {
+      const res = await asAdmin(http().delete(`/products/${productId}/image`)).expect(200);
+      expect(res.body.imagePath).toBeNull();
+      expect(await folderFiles(productId)).toEqual([]);
     });
   });
 });

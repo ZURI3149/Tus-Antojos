@@ -9,7 +9,13 @@ import type {
   UpdateIngredient,
   UpdateProduct,
 } from '@tus-antojos/shared';
-import { catalogRuleMessage, createProductSchema, setRecipeSchema } from '@tus-antojos/shared';
+import {
+  catalogRuleMessage,
+  createProductSchema,
+  PRODUCT_IMAGE_PATH,
+  setRecipeSchema,
+} from '@tus-antojos/shared';
+import type { ProductImageStorage } from '@/features/catalog/images';
 import type { CatalogReader } from '@/features/catalog/reader';
 import { ApiError } from '@/lib/api-client';
 
@@ -261,8 +267,64 @@ export function createFakeCatalog(data: CatalogData = seedCatalog()) {
       return structuredClone(target);
     }
 
+    const imageUpload = path.match(/^\/products\/([^/]+)\/image-upload$/);
+    if (method === 'POST' && imageUpload) {
+      findProduct(imageUpload[1]!);
+      const target = `products/${imageUpload[1]}/${crypto.randomUUID()}.webp`;
+      return {
+        path: target,
+        token: `token-${target}`,
+        signedUrl: `https://storage.test/${target}`,
+      };
+    }
+
+    const image = path.match(/^\/products\/([^/]+)\/image$/);
+    if (method === 'PUT' && image) {
+      const target = findProduct(image[1]!);
+      const { path: imagePath } = body as { path: string };
+      if (PRODUCT_IMAGE_PATH.exec(imagePath)?.[1] !== target.id) {
+        throw new ApiError(
+          400,
+          'VALIDATION_ERROR',
+          'La imagen no pertenece a este producto',
+          undefined,
+          'r',
+        );
+      }
+      if (!files.has(imagePath)) {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'La imagen no se subió', undefined, 'r');
+      }
+      for (const file of files)
+        if (file.startsWith(`products/${target.id}/`) && file !== imagePath) files.delete(file);
+      target.imagePath = imagePath;
+      return structuredClone(target);
+    }
+    if (method === 'DELETE' && image) {
+      const target = findProduct(image[1]!);
+      for (const file of files) if (file.startsWith(`products/${target.id}/`)) files.delete(file);
+      target.imagePath = null;
+      return structuredClone(target);
+    }
+
     return NOT_HANDLED;
   }
+
+  function findProduct(id: string): Product {
+    const product = data.products.find((p) => p.id === id);
+    if (!product) throw new ApiError(404, 'NOT_FOUND', 'Producto no encontrado', undefined, 'r');
+    return product;
+  }
+
+  /** Archivos del bucket (rutas). Subir solo se puede a una ruta emitida por la API. */
+  const files = new Set<string>();
+  const images: ProductImageStorage = {
+    publicUrl: (path) => `https://storage.test/${path}`,
+    upload: async (target, file) => {
+      if (target.token !== `token-${target.path}`) throw new Error('No se pudo subir la foto');
+      if (file.type !== 'image/webp') throw new Error('No se pudo subir la foto');
+      files.add(target.path);
+    },
+  };
 
   const inactiveIngredient = (id: string) => !data.ingredients.find((i) => i.id === id)?.isActive;
 
@@ -278,7 +340,7 @@ export function createFakeCatalog(data: CatalogData = seedCatalog()) {
     }
   }
 
-  return { reader, handle, data };
+  return { reader, images, files, handle, data };
 }
 
 export type FakeCatalog = ReturnType<typeof createFakeCatalog>;

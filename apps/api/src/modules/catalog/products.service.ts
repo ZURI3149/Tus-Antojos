@@ -71,13 +71,28 @@ export class ProductsService {
     return this.get(id);
   }
 
-  private async get(id: string): Promise<Product> {
+  /** Producto con su receta; 404 si no existe. */
+  async get(id: string): Promise<Product> {
     const { data, error } = await this.supabase.admin
       .from('products')
       .select(WITH_RECIPE)
       .eq('id', id)
-      .single();
+      .maybeSingle();
     if (error) throw catalogError(error, CONFLICT_MESSAGE);
+    if (!data) throw new AppException('NOT_FOUND', 'Producto no encontrado');
+    return toProduct(data);
+  }
+
+  /** Asigna (o quita, con null) la ruta de la foto. */
+  async setImagePath(id: string, path: string | null): Promise<Product> {
+    const { data, error } = await this.supabase.admin
+      .from('products')
+      .update({ image_path: path })
+      .eq('id', id)
+      .select(WITH_RECIPE)
+      .maybeSingle();
+    if (error) throw catalogError(error, CONFLICT_MESSAGE);
+    if (!data) throw new AppException('NOT_FOUND', 'Producto no encontrado');
     return toProduct(data);
   }
 }

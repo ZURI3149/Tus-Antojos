@@ -7,6 +7,7 @@ import { selectClassName } from '@/lib/utils';
 import { CatalogNav } from './CatalogNav';
 import { useCategories, useProducts } from './api';
 import { ListState, StatusBadge } from './common';
+import { useProductImageStorage } from './images';
 import { normalizeSearch } from './labels';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -14,6 +15,7 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 export function ProductsPage() {
   const products = useProducts();
   const categories = useCategories();
+  const storage = useProductImageStorage();
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -90,6 +92,9 @@ export function ProductsPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left">
               <tr>
+                <th className="w-14 px-3 py-2 font-medium">
+                  <span className="sr-only">Foto</span>
+                </th>
                 <th className="px-3 py-2 font-medium">Nombre</th>
                 <th className="px-3 py-2 font-medium">Categoría</th>
                 <th className="px-3 py-2 text-right font-medium">Precio</th>
@@ -102,6 +107,18 @@ export function ProductsPage() {
             <tbody>
               {visible.map((product) => (
                 <tr key={product.id} className="border-t">
+                  <td className="px-3 py-1.5">
+                    {product.imagePath ? (
+                      <img
+                        src={storage.publicUrl(product.imagePath)}
+                        alt=""
+                        loading="lazy"
+                        className="size-10 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="size-10 rounded-md bg-muted" aria-hidden />
+                    )}
+                  </td>
                   <td className="px-3 py-2 font-medium">{product.name}</td>
                   <td className="px-3 py-2">{categoryName.get(product.categoryId) ?? '—'}</td>
                   <td className="px-3 py-2 text-right tabular-nums">

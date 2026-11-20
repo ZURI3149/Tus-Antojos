@@ -10,7 +10,12 @@ export function renderApp(path: string, fake: FakeAuth, fakeApi: FakeApi = creat
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
     <AppProviders
-      services={{ ...fake.services, api: fakeApi.api, catalog: fakeApi.catalog.reader }}
+      services={{
+        ...fake.services,
+        api: fakeApi.api,
+        catalog: fakeApi.catalog.reader,
+        productImages: fakeApi.catalog.images,
+      }}
     >
       <RouterProvider router={router} />
     </AppProviders>,

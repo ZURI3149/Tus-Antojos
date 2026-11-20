@@ -4,13 +4,20 @@ import { CategoriesController } from './categories.controller.js';
 import { CategoriesService } from './categories.service.js';
 import { IngredientsController } from './ingredients.controller.js';
 import { IngredientsService } from './ingredients.service.js';
+import { ProductImagesController } from './product-images.controller.js';
+import { ProductImagesService } from './product-images.service.js';
 import { ProductsController } from './products.controller.js';
 import { ProductsService } from './products.service.js';
 
 /** Escrituras del catálogo (spec catalog §3.1). Todas las rutas son solo para admin. */
 @Module({
   imports: [AuthModule],
-  controllers: [CategoriesController, IngredientsController, ProductsController],
-  providers: [CategoriesService, IngredientsService, ProductsService],
+  controllers: [
+    CategoriesController,
+    IngredientsController,
+    ProductsController,
+    ProductImagesController,
+  ],
+  providers: [CategoriesService, IngredientsService, ProductsService, ProductImagesService],
 })
 export class CatalogModule {}

@@ -19,7 +19,7 @@ const visibleNames = () =>
   screen
     .getAllByRole('row')
     .slice(1)
-    .map((r) => r.children[0]?.textContent);
+    .map((r) => r.children[1]?.textContent);
 
 describe('ProductsPage', () => {
   it('lista los productos con categoría, precio en Bs y estado', async () => {
@@ -32,6 +32,17 @@ describe('ProductsPage', () => {
     expect(within(malteada).getByText('Bebidas')).toBeVisible();
     expect(within(malteada).getByText('Bs 18,50')).toBeVisible();
     expect(within(malteada).getByText('Inactivo')).toBeVisible();
+  });
+
+  it('muestra la miniatura de la foto', async () => {
+    const api = createFakeApi();
+    const path =
+      'products/00000000-0000-4000-8000-0000000000f1/00000000-0000-4000-8000-0000000000aa.webp';
+    api.catalog.data.products[0]!.imagePath = path;
+    renderApp('/admin/productos', createFakeAuth({ session: 'admin' }), api);
+    const cono = await rowOf('Cono simple');
+    expect(cono.querySelector('img')).toHaveAttribute('src', `https://storage.test/${path}`);
+    expect((await rowOf('Malteada')).querySelector('img')).toBeNull();
   });
 
   it('busca sin distinguir mayúsculas ni tildes', async () => {

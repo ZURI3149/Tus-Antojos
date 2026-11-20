@@ -6,6 +6,7 @@ import { AppProviders, type AppServices } from './app/providers';
 import { PwaUpdater } from './app/PwaUpdater';
 import { createAppRouter } from './app/router';
 import { createProfileFetcher } from './features/auth/profile';
+import { createSupabaseProductImageStorage } from './features/catalog/images';
 import { createSupabaseCatalogReader } from './features/catalog/reader';
 import { createApiClient } from './lib/api-client';
 import { initWebSentry } from './lib/sentry';
@@ -31,6 +32,7 @@ const services: AppServices = {
     onForbidden: (message) => toast.warning(message),
   }),
   catalog: createSupabaseCatalogReader(supabase),
+  productImages: createSupabaseProductImageStorage(supabase),
 };
 
 const router = createAppRouter();

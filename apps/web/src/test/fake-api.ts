@@ -60,6 +60,7 @@ export function createFakeApi(
     post: (path, body) => handle('POST', path, body) as never,
     patch: (path, body) => handle('PATCH', path, body) as never,
     put: (path, body) => handle('PUT', path, body) as never,
+    delete: (path) => handle('DELETE', path) as never,
   };
 
   return {

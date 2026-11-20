@@ -19,6 +19,7 @@ import {
   useUpdateProduct,
 } from './api';
 import { ListState, StatusBadge } from './common';
+import { ProductImageField } from './ProductImageField';
 import { ProductForm, type ProductFormValues, type RecipeRowInput } from './ProductForm';
 
 const LIST_PATH = '/admin/productos';
@@ -43,6 +44,7 @@ export function NewProductPage() {
       <CatalogNav />
       <BackLink />
       <h1 className="text-2xl font-semibold">Nuevo producto</h1>
+      <p className="text-sm text-muted-foreground">La foto se agrega después de crearlo.</p>
       <ListState query={categories} what="las categorías" />
       <ListState query={ingredients} what="los insumos" />
       {categories.data && ingredients.data && (
@@ -92,6 +94,7 @@ export function ProductEditPage() {
             <h1 className="text-2xl font-semibold">{product.name}</h1>
             <StatusBadge active={product.isActive} />
           </div>
+          <ProductImageField product={product} />
           <EditProductForm
             // Al cambiar de producto se reinicia el formulario.
             key={product.id}

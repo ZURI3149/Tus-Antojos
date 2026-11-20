@@ -6,6 +6,7 @@ import type {
   CreateProductInput,
   Ingredient,
   Product,
+  ProductImageUpload,
   RecipeItem,
   UpdateCategory,
   UpdateIngredient,
@@ -15,6 +16,7 @@ import { toast } from 'sonner';
 import type { ApiError } from '@/lib/api-client';
 import { useApi } from '@/lib/api-context';
 import { notifyError } from '@/lib/notify-error';
+import { useProductImageStorage } from './images';
 import { useCatalogReader } from './reader';
 
 /** Claves de caché del catálogo. Toda escritura invalida `all` (los datos se cruzan). */
@@ -137,6 +139,34 @@ export function useSetProductRecipe() {
   return useMutation({
     mutationFn: ({ id, items }: { id: string; items: RecipeItem[] }) =>
       api.put<Product>(`/products/${id}/recipe`, { items }),
+    onSettled: invalidate,
+  });
+}
+
+// --- Foto del producto --------------------------------------------------------
+
+/** Pide la URL firmada, sube la foto directo a Storage y la confirma (borra la anterior). */
+export function useSaveProductImage(productId: string) {
+  const api = useApi();
+  const storage = useProductImageStorage();
+  const invalidate = useInvalidateCatalog();
+  return useMutation({
+    mutationFn: async (file: Blob) => {
+      const target = await api.post<ProductImageUpload>(`/products/${productId}/image-upload`, {});
+      await storage.upload(target, file);
+      return api.put<Product>(`/products/${productId}/image`, { path: target.path });
+    },
+    onSuccess: () => toast.success('Foto guardada'),
+    onSettled: invalidate,
+  });
+}
+
+export function useRemoveProductImage(productId: string) {
+  const api = useApi();
+  const invalidate = useInvalidateCatalog();
+  return useMutation({
+    mutationFn: () => api.delete<Product>(`/products/${productId}/image`),
+    onSuccess: () => toast.success('Foto quitada'),
     onSettled: invalidate,
   });
 }

@@ -10,6 +10,7 @@ import { APP_CONFIG } from '../src/config/config.module.js';
 import { loadEnv } from '../src/config/env.schema.js';
 import { CategoriesService } from '../src/modules/catalog/categories.service.js';
 import { IngredientsService } from '../src/modules/catalog/ingredients.service.js';
+import { ProductImagesService } from '../src/modules/catalog/product-images.service.js';
 import { ProductsService } from '../src/modules/catalog/products.service.js';
 import { SupabaseService } from '../src/supabase/supabase.service.js';
 import { createTestKeys, TEST_SUPABASE_URL } from './support/jwt.js';
@@ -28,15 +29,19 @@ const services = {
   categories: { create: vi.fn(), update: vi.fn() },
   ingredients: { create: vi.fn(), update: vi.fn() },
   products: { create: vi.fn(), update: vi.fn(), setRecipe: vi.fn() },
+  images: { createUpload: vi.fn(), confirm: vi.fn(), remove: vi.fn() },
 };
+const IMAGE_PATH = `products/${SOME_ID}/00000000-0000-4000-8000-0000000000bb.webp`;
 
 interface Route {
-  method: 'post' | 'patch' | 'put';
+  method: 'post' | 'patch' | 'put' | 'delete';
   path: string;
   body: Record<string, unknown>;
   /** Llamada esperada al servicio con el cuerpo ya validado y normalizado. */
   handler: Mock;
   expectedArgs: unknown[];
+  /** La ruta no recibe cuerpo: no hay datos inválidos que probar. */
+  noBody?: true;
 }
 
 const ROUTES: Route[] = [
@@ -98,6 +103,28 @@ const ROUTES: Route[] = [
     handler: services.products.setRecipe,
     expectedArgs: [SOME_ID, [{ ingredientId: SOME_ID, quantity: 1500 }]],
   },
+  {
+    method: 'post',
+    path: `/products/${SOME_ID}/image-upload`,
+    body: {},
+    handler: services.images.createUpload,
+    expectedArgs: [SOME_ID],
+  },
+  {
+    method: 'put',
+    path: `/products/${SOME_ID}/image`,
+    body: { path: IMAGE_PATH },
+    handler: services.images.confirm,
+    expectedArgs: [SOME_ID, IMAGE_PATH],
+  },
+  {
+    method: 'delete',
+    path: `/products/${SOME_ID}/image`,
+    body: {},
+    handler: services.images.remove,
+    expectedArgs: [SOME_ID],
+    noBody: true,
+  },
 ];
 
 describe('rutas del catálogo (permisos y validación)', () => {
@@ -134,6 +161,8 @@ describe('rutas del catálogo (permisos y validación)', () => {
       .useValue(services.ingredients)
       .overrideProvider(ProductsService)
       .useValue(services.products)
+      .overrideProvider(ProductImagesService)
+      .useValue(services.images)
       .overrideProvider(SupabaseService)
       .useValue({ isDatabaseReachable: async () => true })
       .compile();
@@ -171,7 +200,7 @@ describe('rutas del catálogo (permisos y validación)', () => {
       expect(route.handler).toHaveBeenCalledWith(...route.expectedArgs);
     });
 
-    it('admin con datos inválidos → 400 sin llegar al servicio', async () => {
+    it.skipIf(route.noBody)('admin con datos inválidos → 400 sin llegar al servicio', async () => {
       const res = await send(route, 'admin', { name: '', extra: true }).expect(400);
       expect(res.body.error.code).toBe('VALIDATION_ERROR');
       expect(route.handler).not.toHaveBeenCalled();
@@ -208,6 +237,19 @@ describe('rutas del catálogo (permisos y validación)', () => {
       .send({ items })
       .expect(400);
     expect(services.products.setRecipe).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['fuera de products/', 'otra/carpeta/x.webp'],
+    ['que no es .webp', `products/${SOME_ID}/00000000-0000-4000-8000-0000000000bb.png`],
+    ['con ..', `products/${SOME_ID}/../x.webp`],
+  ])('PUT /products/:id/image con una ruta %s → 400', async (_label, path) => {
+    await request(app.getHttpServer())
+      .put(`/products/${SOME_ID}/image`)
+      .set('authorization', `Bearer ${tokens.admin}`)
+      .send({ path })
+      .expect(400);
+    expect(services.images.confirm).not.toHaveBeenCalled();
   });
 
   it('un id que no es UUID → 400', async () => {

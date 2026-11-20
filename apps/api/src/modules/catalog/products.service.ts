@@ -3,6 +3,7 @@ import {
   toProduct,
   type CreateProduct,
   type Product,
+  type RecipeItem,
   type TablesUpdate,
   type UpdateProduct,
 } from '@tus-antojos/shared';
@@ -55,6 +56,19 @@ export class ProductsService {
     if (error) throw catalogError(error, CONFLICT_MESSAGE);
     if (!data) throw new AppException('NOT_FOUND', 'Producto no encontrado');
     return toProduct(data);
+  }
+
+  /**
+   * Reemplaza la receta completa (`set_product_recipe`). Las ventas pasadas no cambian (D6).
+   * Dejar sin receta a un producto activo o usar un insumo inactivo falla (422) sin tocar nada.
+   */
+  async setRecipe(id: string, items: RecipeItem[]): Promise<Product> {
+    const { error } = await this.supabase.admin.rpc('set_product_recipe', {
+      p_product_id: id,
+      p_items: items.map((item) => ({ ingredient_id: item.ingredientId, quantity: item.quantity })),
+    });
+    if (error) throw catalogError(error, CONFLICT_MESSAGE);
+    return this.get(id);
   }
 
   private async get(id: string): Promise<Product> {

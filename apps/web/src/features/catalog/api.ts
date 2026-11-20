@@ -6,6 +6,7 @@ import type {
   CreateProductInput,
   Ingredient,
   Product,
+  RecipeItem,
   UpdateCategory,
   UpdateIngredient,
   UpdateProduct,
@@ -118,13 +119,24 @@ export function useCreateProduct() {
   });
 }
 
+/** Sin aviso propio: la pantalla avisa al terminar de guardar (puede ir junto a la receta). */
 export function useUpdateProduct() {
   const api = useApi();
   const invalidate = useInvalidateCatalog();
   return useMutation({
     mutationFn: ({ id, changes }: { id: string; changes: UpdateProduct }) =>
       api.patch<Product>(`/products/${id}`, changes),
-    onSuccess: () => toast.success('Producto actualizado'),
+    onSettled: invalidate,
+  });
+}
+
+/** Reemplaza la receta completa. Sin aviso propio: la pantalla avisa al terminar de guardar. */
+export function useSetProductRecipe() {
+  const api = useApi();
+  const invalidate = useInvalidateCatalog();
+  return useMutation({
+    mutationFn: ({ id, items }: { id: string; items: RecipeItem[] }) =>
+      api.put<Product>(`/products/${id}/recipe`, { items }),
     onSettled: invalidate,
   });
 }

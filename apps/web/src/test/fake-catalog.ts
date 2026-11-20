@@ -9,7 +9,7 @@ import type {
   UpdateIngredient,
   UpdateProduct,
 } from '@tus-antojos/shared';
-import { catalogRuleMessage, createProductSchema } from '@tus-antojos/shared';
+import { catalogRuleMessage, createProductSchema, setRecipeSchema } from '@tus-antojos/shared';
 import type { CatalogReader } from '@/features/catalog/reader';
 import { ApiError } from '@/lib/api-client';
 
@@ -66,6 +66,14 @@ export function seedCatalog(): CatalogData {
     createdAt: NOW,
     updatedAt: NOW,
   };
+  /** Inactivo: no se ofrece en las recetas. */
+  const chocolate: Ingredient = {
+    ...leche,
+    id: '00000000-0000-4000-8000-0000000000e3',
+    name: 'Chocolate',
+    unit: 'g',
+    isActive: false,
+  };
   /** Inactivo y sin receta: no se puede activar. */
   const malteada: Product = {
     ...cono,
@@ -87,7 +95,7 @@ export function seedCatalog(): CatalogData {
   };
   return {
     categories: [helados, bebidas, temporada],
-    ingredients: [leche, azucar],
+    ingredients: [leche, azucar, chocolate],
     products: [cono, malteada],
   };
 }
@@ -216,6 +224,9 @@ export function createFakeCatalog(data: CatalogData = seedCatalog()) {
         createdAt: NOW,
         updatedAt: NOW,
       };
+      if (product.recipe.some((item) => inactiveIngredient(item.ingredientId))) {
+        throw rule('INGREDIENT_INACTIVE');
+      }
       checkProductRules(product);
       data.products.push(product);
       return structuredClone(product);
@@ -237,15 +248,29 @@ export function createFakeCatalog(data: CatalogData = seedCatalog()) {
       return structuredClone(target);
     }
 
+    const recipe = path.match(/^\/products\/([^/]+)\/recipe$/);
+    if (method === 'PUT' && recipe) {
+      const target = data.products.find((p) => p.id === recipe[1]);
+      if (!target) throw rule('PRODUCT_NOT_FOUND');
+      const { items } = setRecipeSchema.parse(body);
+      if (items.some((item) => inactiveIngredient(item.ingredientId))) {
+        throw rule('INGREDIENT_INACTIVE');
+      }
+      checkProductRules({ ...target, recipe: items });
+      target.recipe = items;
+      return structuredClone(target);
+    }
+
     return NOT_HANDLED;
   }
+
+  const inactiveIngredient = (id: string) => !data.ingredients.find((i) => i.id === id)?.isActive;
 
   /** Reglas de un producto activo (triggers de la BD). */
   function checkProductRules(product: Product) {
     if (!product.isActive) return;
     if (product.recipe.length === 0) throw rule('PRODUCT_WITHOUT_RECIPE');
-    const inactive = (id: string) => !data.ingredients.find((i) => i.id === id)?.isActive;
-    if (product.recipe.some((item) => inactive(item.ingredientId))) {
+    if (product.recipe.some((item) => inactiveIngredient(item.ingredientId))) {
       throw rule('INGREDIENT_INACTIVE');
     }
     if (!data.categories.find((c) => c.id === product.categoryId)?.isActive) {

@@ -311,6 +311,47 @@ describe('catálogo contra Supabase local', () => {
       expect(res.body.error.details.reason).toBe('CATEGORY_INACTIVE');
     });
 
+    it('PUT /products/:id/recipe reemplaza la receta y deja activar el producto (CA-02)', async () => {
+      const recipe = await asAdmin(http().put(`/products/${productId}/recipe`))
+        .send({ items: [{ ingredientId, quantity: 1500 }] })
+        .expect(200);
+      expect(recipe.body.recipe).toEqual([{ ingredientId, quantity: 1500 }]);
+
+      await asAdmin(http().patch(`/products/${productId}`))
+        .send({ categoryId, isActive: true })
+        .expect(200);
+    });
+
+    it('vaciar la receta de un producto activo → 422 y la receta no cambia (CA-06)', async () => {
+      const res = await asAdmin(http().put(`/products/${productId}/recipe`))
+        .send({ items: [] })
+        .expect(422);
+      expect(res.body.error.details.reason).toBe('PRODUCT_WITHOUT_RECIPE');
+      const { data } = await service
+        .from('recipe_items')
+        .select('ingredient_id, quantity')
+        .eq('product_id', productId);
+      expect(data).toEqual([{ ingredient_id: ingredientId, quantity: 1500 }]);
+    });
+
+    it('un insumo inactivo en la receta → 422 INGREDIENT_INACTIVE', async () => {
+      const { data: old } = await service
+        .from('ingredients')
+        .insert({ name: `${PREFIX}Jarabe viejo`, unit: 'ml', is_active: false })
+        .select()
+        .single();
+      const res = await asAdmin(http().put(`/products/${productId}/recipe`))
+        .send({ items: [{ ingredientId: old!.id, quantity: 10 }] })
+        .expect(422);
+      expect(res.body.error.details.reason).toBe('INGREDIENT_INACTIVE');
+    });
+
+    it('PUT de la receta de un producto inexistente → 404', async () => {
+      await asAdmin(http().put(`/products/${crypto.randomUUID()}/recipe`))
+        .send({ items: [{ ingredientId, quantity: 1 }] })
+        .expect(404);
+    });
+
     it('PATCH de un producto inexistente → 404', async () => {
       await asAdmin(http().patch(`/products/${crypto.randomUUID()}`))
         .send({ priceCents: 100 })

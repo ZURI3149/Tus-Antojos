@@ -32,6 +32,8 @@ describe('ProductForm: alta', () => {
         description: 'Con tres bolas',
         categoryId: HELADOS,
         priceCents: 1250,
+        isActive: false,
+        recipe: [],
       }),
     );
     const created = api.catalog.data.products.find((p) => p.name === 'Banana split')!;

@@ -1,9 +1,11 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post, Put } from '@nestjs/common';
 import {
   createProductSchema,
+  setRecipeSchema,
   updateProductSchema,
   type CreateProduct,
   type Product,
+  type SetRecipe,
   type UpdateProduct,
 } from '@tus-antojos/shared';
 import { z } from 'zod';
@@ -28,5 +30,14 @@ export class ProductsController {
     @Body(new ZodValidationPipe(updateProductSchema)) body: UpdateProduct,
   ): Promise<Product> {
     return this.products.update(id, body);
+  }
+
+  /** Reemplaza la receta completa. */
+  @Put(':id/recipe')
+  setRecipe(
+    @Param('id', new ZodValidationPipe(z.uuid())) id: string,
+    @Body(new ZodValidationPipe(setRecipeSchema)) body: SetRecipe,
+  ): Promise<Product> {
+    return this.products.setRecipe(id, body.items);
   }
 }

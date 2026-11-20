@@ -27,11 +27,11 @@ const SOME_ID = '00000000-0000-4000-8000-0000000000aa';
 const services = {
   categories: { create: vi.fn(), update: vi.fn() },
   ingredients: { create: vi.fn(), update: vi.fn() },
-  products: { create: vi.fn(), update: vi.fn() },
+  products: { create: vi.fn(), update: vi.fn(), setRecipe: vi.fn() },
 };
 
 interface Route {
-  method: 'post' | 'patch';
+  method: 'post' | 'patch' | 'put';
   path: string;
   body: Record<string, unknown>;
   /** Llamada esperada al servicio con el cuerpo ya validado y normalizado. */
@@ -90,6 +90,13 @@ const ROUTES: Route[] = [
     body: { priceCents: 1500, description: ' Con chispas ' },
     handler: services.products.update,
     expectedArgs: [SOME_ID, { priceCents: 1500, description: 'Con chispas' }],
+  },
+  {
+    method: 'put',
+    path: `/products/${SOME_ID}/recipe`,
+    body: { items: [{ ingredientId: SOME_ID, quantity: 1500 }] },
+    handler: services.products.setRecipe,
+    expectedArgs: [SOME_ID, [{ ingredientId: SOME_ID, quantity: 1500 }]],
   },
 ];
 
@@ -182,6 +189,25 @@ describe('rutas del catálogo (permisos y validación)', () => {
       .send(body)
       .expect(400);
     expect(services.products.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['cantidad no entera (kg sin convertir)', [{ ingredientId: SOME_ID, quantity: 1.5 }]],
+    ['cantidad 0', [{ ingredientId: SOME_ID, quantity: 0 }]],
+    [
+      'insumo repetido',
+      [
+        { ingredientId: SOME_ID, quantity: 1 },
+        { ingredientId: SOME_ID, quantity: 2 },
+      ],
+    ],
+  ])('PUT /products/:id/recipe con %s → 400', async (_label, items) => {
+    await request(app.getHttpServer())
+      .put(`/products/${SOME_ID}/recipe`)
+      .set('authorization', `Bearer ${tokens.admin}`)
+      .send({ items })
+      .expect(400);
+    expect(services.products.setRecipe).not.toHaveBeenCalled();
   });
 
   it('un id que no es UUID → 400', async () => {

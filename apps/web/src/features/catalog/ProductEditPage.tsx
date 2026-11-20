@@ -9,6 +9,7 @@ import {
 } from '@tus-antojos/shared';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/page-header';
 import { CatalogNav } from './CatalogNav';
 import {
   useCategories,
@@ -26,7 +27,10 @@ const LIST_PATH = '/admin/productos';
 
 function BackLink() {
   return (
-    <Link to={LIST_PATH} className="text-sm text-muted-foreground hover:underline">
+    <Link
+      to={LIST_PATH}
+      className="w-fit font-heading text-xs tracking-wider text-muted-foreground uppercase hover:text-primary"
+    >
       ← Productos
     </Link>
   );
@@ -40,11 +44,14 @@ export function NewProductPage() {
   const navigate = useNavigate();
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-6">
       <CatalogNav />
       <BackLink />
-      <h1 className="text-2xl font-semibold">Nuevo producto</h1>
-      <p className="text-sm text-muted-foreground">La foto se agrega después de crearlo.</p>
+      <PageHeader
+        eyebrow="Catálogo"
+        title="Nuevo producto"
+        description="La foto se agrega después de crearlo."
+      />
       <ListState query={categories} what="las categorías" />
       <ListState query={ingredients} what="los insumos" />
       {categories.data && ingredients.data && (
@@ -79,7 +86,7 @@ export function ProductEditPage() {
   const product = products.data?.find((p) => p.id === id);
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-6">
       <CatalogNav />
       <BackLink />
       <ListState query={products} what="el producto" />
@@ -90,10 +97,11 @@ export function ProductEditPage() {
       )}
       {product && categories.data && ingredients.data && (
         <>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold">{product.name}</h1>
-            <StatusBadge active={product.isActive} />
-          </div>
+          <PageHeader
+            eyebrow="Editar producto"
+            title={product.name}
+            badge={<StatusBadge active={product.isActive} />}
+          />
           <ProductImageField product={product} />
           <EditProductForm
             // Al cambiar de producto se reinicia el formulario.

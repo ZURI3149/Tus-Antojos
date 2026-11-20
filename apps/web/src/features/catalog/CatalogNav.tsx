@@ -4,13 +4,18 @@ import { CATALOG_SECTIONS } from './sections';
 
 export function CatalogNav() {
   return (
-    <nav aria-label="Catálogo" className="flex flex-wrap gap-1 border-b pb-2">
+    <nav aria-label="Catálogo" className="flex flex-wrap gap-2">
       {CATALOG_SECTIONS.map((section) => (
         <NavLink
           key={section.path}
           to={section.path}
           className={({ isActive }) =>
-            cn('rounded-md px-3 py-1.5 text-sm hover:bg-muted', isActive && 'bg-muted font-medium')
+            cn(
+              'rounded-full border px-4 py-1.5 font-heading text-xs tracking-[0.12em] uppercase transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+              isActive
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-background text-foreground/80 hover:border-primary/50 hover:text-primary',
+            )
           }
         >
           {section.label}

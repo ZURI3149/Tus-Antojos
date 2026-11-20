@@ -8,6 +8,7 @@ import {
 } from '@tus-antojos/shared';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -50,12 +51,14 @@ export function IngredientsPage() {
   }, [ingredients.data, search]);
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-6">
       <CatalogNav />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">Insumos</h1>
-        {!creating && <Button onClick={() => setCreating(true)}>Nuevo insumo</Button>}
-      </div>
+      <PageHeader
+        eyebrow="Catálogo"
+        title="Insumos"
+        description="Lo que consume cada receta, medido en g, ml o unidades."
+        actions={!creating && <Button onClick={() => setCreating(true)}>Nuevo insumo</Button>}
+      />
 
       {creating && <NewIngredient onDone={() => setCreating(false)} />}
 
@@ -75,9 +78,9 @@ export function IngredientsPage() {
         </p>
       )}
       {visible.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="relative overflow-x-auto rounded-md border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-left">
+            <thead className="border-b bg-secondary text-left">
               <tr>
                 <th className="px-3 py-2 font-medium">Nombre</th>
                 <th className="px-3 py-2 font-medium">Medida</th>
@@ -226,7 +229,7 @@ function IngredientForm({
       aria-label={label}
       onSubmit={submit}
       noValidate
-      className="flex flex-wrap items-start gap-3 rounded-lg border p-3"
+      className="flex flex-wrap items-start gap-3 rounded-md border-l-4 border-primary bg-secondary/60 p-4"
     >
       <Field data-invalid={!!errors.name} className="min-w-48 flex-1">
         <FieldLabel htmlFor={id('name')}>Nombre</FieldLabel>
@@ -238,13 +241,22 @@ function IngredientForm({
         {unitLockedReason ? (
           // React Hook Form descarta los campos deshabilitados: la unidad viaja oculta.
           <>
-            <select id={id('unit')} className={selectClassName} disabled value={defaultValues.unit}>
+            <select
+              id={id('unit')}
+              className={`${selectClassName} w-full`}
+              disabled
+              value={defaultValues.unit}
+            >
               <option value={defaultValues.unit}>{UNIT_LABELS[defaultValues.unit]}</option>
             </select>
             <input type="hidden" {...form.register('unit')} />
           </>
         ) : (
-          <select id={id('unit')} className={selectClassName} {...form.register('unit')}>
+          <select
+            id={id('unit')}
+            className={`${selectClassName} w-full`}
+            {...form.register('unit')}
+          >
             {INGREDIENT_UNITS.map((unit) => (
               <option key={unit} value={unit}>
                 {UNIT_LABELS[unit]}

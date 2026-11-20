@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { safeRedirectTarget } from '@/app/roles';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { useAuth, type SignInFailure } from './auth-context';
@@ -45,15 +44,46 @@ export function LoginPage() {
   });
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-muted p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>
-            <h1>Iniciar sesión</h1>
-          </CardTitle>
-          <CardDescription>Tus Antojos · Punto de venta y gestión</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <main className="grid min-h-svh bg-background lg:grid-cols-2">
+      {/* Panel de marca: solo en pantallas grandes. */}
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-primary p-12 text-primary-foreground lg:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full border-[40px] border-white/10"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-16 -left-16 size-64 rounded-full bg-gold/15"
+        />
+        <span className="relative font-heading text-xl tracking-[0.3em] uppercase">
+          Tus Antojos
+        </span>
+        <div className="relative flex max-w-md flex-col gap-4">
+          <p className="font-heading text-sm font-light tracking-wide text-gold">
+            Artesanía y sabor
+          </p>
+          <p className="font-heading text-4xl leading-tight font-light">
+            Cada pedido, preparado con cariño.
+          </p>
+          <p className="text-sm text-primary-foreground/80">
+            Caja, cocina e inventario de la tienda en un solo lugar.
+          </p>
+        </div>
+        <span aria-hidden className="relative text-2xl tracking-[0.5em] text-gold">
+          ···
+        </span>
+      </div>
+
+      <div className="flex items-center justify-center p-6">
+        <div className="flex w-full max-w-sm flex-col gap-8">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <img src="/logo.svg" alt="" className="size-14" />
+            <div className="flex flex-col gap-1">
+              <p className="eyebrow">Tus Antojos · Punto de venta y gestión</p>
+              <h1 className="page-title">Iniciar sesión</h1>
+            </div>
+            <span aria-hidden className="block h-0.5 w-12 bg-primary" />
+          </div>
           <form onSubmit={onSubmit} noValidate>
             <FieldGroup>
               {failure && (
@@ -88,6 +118,7 @@ export function LoginPage() {
               </Field>
               <Button
                 type="submit"
+                size="lg"
                 className="w-full"
                 disabled={isSubmitting || status === 'loading'}
               >
@@ -95,8 +126,8 @@ export function LoginPage() {
               </Button>
             </FieldGroup>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </main>
   );
 }

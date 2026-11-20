@@ -55,7 +55,7 @@ export function UserForm({ onDone }: { onDone: () => void }) {
       aria-label="Nuevo usuario"
       onSubmit={onSubmit}
       noValidate
-      className="rounded-lg border p-4"
+      className="rounded-md border-l-4 border-primary bg-secondary/60 p-4"
     >
       <FieldGroup>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -92,7 +92,11 @@ export function UserForm({ onDone }: { onDone: () => void }) {
           </Field>
           <Field data-invalid={!!errors.role}>
             <FieldLabel htmlFor="user-role">Rol</FieldLabel>
-            <select id="user-role" className={selectClassName} {...form.register('role')}>
+            <select
+              id="user-role"
+              className={`${selectClassName} w-full`}
+              {...form.register('role')}
+            >
               {APP_ROLES.map((role) => (
                 <option key={role} value={role}>
                   {ROLE_LABELS[role]}

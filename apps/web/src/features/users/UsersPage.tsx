@@ -1,6 +1,8 @@
 import { APP_ROLES, type AppRole, type User } from '@tus-antojos/shared';
 import { useState } from 'react';
 import { ROLE_LABELS } from '@/app/roles';
+import { PageHeader } from '@/components/page-header';
+import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/auth-context';
 import { cn } from '@/lib/utils';
@@ -15,11 +17,13 @@ export function UsersPage() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">Usuarios</h1>
-        {!creating && <Button onClick={() => setCreating(true)}>Nuevo usuario</Button>}
-      </div>
+    <section className="flex flex-col gap-6">
+      <PageHeader
+        eyebrow="Administración"
+        title="Usuarios"
+        description="Quién entra a la caja, la cocina y la administración."
+        actions={!creating && <Button onClick={() => setCreating(true)}>Nuevo usuario</Button>}
+      />
 
       {creating && <UserForm onDone={() => setCreating(false)} />}
 
@@ -42,9 +46,9 @@ function UsersTable({ users }: { users: User[] }) {
   const updateUser = useUpdateUser();
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="relative overflow-x-auto rounded-md border bg-card">
       <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left">
+        <thead className="border-b bg-secondary text-left">
           <tr>
             <th className="px-3 py-2 font-medium">Nombre</th>
             <th className="px-3 py-2 font-medium">Correo</th>
@@ -60,7 +64,7 @@ function UsersTable({ users }: { users: User[] }) {
           {users.map((user) => {
             const isSelf = user.id === session?.user.id;
             return (
-              <tr key={user.id} className="border-t">
+              <tr key={user.id} className="border-t transition-colors hover:bg-secondary/50">
                 <td className="px-3 py-2">
                   {user.fullName} {isSelf && <span className="text-muted-foreground">(tú)</span>}
                 </td>
@@ -86,14 +90,7 @@ function UsersTable({ users }: { users: User[] }) {
                   </select>
                 </td>
                 <td className="px-3 py-2">
-                  <span
-                    className={cn(
-                      'rounded-md px-2 py-0.5 text-xs',
-                      user.isActive ? 'bg-secondary' : 'bg-destructive/10 text-destructive',
-                    )}
-                  >
-                    {user.isActive ? 'Activo' : 'Inactivo'}
-                  </span>
+                  <StatusBadge active={user.isActive} />
                 </td>
                 <td className="px-3 py-2 text-muted-foreground">
                   {user.lastSignInAt ? dateFormat.format(new Date(user.lastSignInAt)) : 'Nunca'}

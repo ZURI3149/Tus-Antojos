@@ -1,5 +1,23 @@
+import {
+  ArrowRight,
+  Boxes,
+  ChartColumn,
+  Croissant,
+  Tags,
+  Users,
+  Wheat,
+  type LucideIcon,
+} from 'lucide-react';
 import { Link } from 'react-router';
+import { PageHeader } from '@/components/page-header';
 import { CATALOG_SECTIONS } from '@/features/catalog/sections';
+
+const ICONS: Record<string, LucideIcon> = {
+  '/admin/productos': Croissant,
+  '/admin/categorias': Tags,
+  '/admin/insumos': Wheat,
+  '/admin/usuarios': Users,
+};
 
 const SECTIONS = [
   ...CATALOG_SECTIONS,
@@ -10,23 +28,60 @@ const SECTIONS = [
   },
 ];
 
+/** Módulos que aún no tienen pantalla: se muestran como adelanto, sin enlace. */
+const UPCOMING = [
+  { label: 'Inventario', description: 'Stock, kardex, compras y mermas', icon: Boxes },
+  { label: 'Reportes', description: 'Ventas, cierres de caja y consumo', icon: ChartColumn },
+];
+
 // Panel de administración. Cada módulo agrega aquí sus secciones.
 export function AdminPage() {
   return (
-    <section className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Administración</h1>
-        <p className="text-muted-foreground">
-          Catálogo y usuarios. Inventario y reportes llegarán después.
-        </p>
-      </div>
-      <ul className="grid gap-3 sm:grid-cols-3">
-        {SECTIONS.map((section) => (
-          <li key={section.path}>
-            <Link to={section.path} className="block rounded-lg border p-4 hover:bg-muted">
-              <span className="font-medium">{section.label}</span>
-              <span className="block text-sm text-muted-foreground">{section.description}</span>
-            </Link>
+    <section className="flex flex-col gap-8">
+      <PageHeader
+        eyebrow="Panel"
+        title="Administración"
+        description="Catálogo y usuarios. Inventario y reportes llegarán después."
+      />
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {SECTIONS.map((section) => {
+          const Icon = ICONS[section.path] ?? Croissant;
+          return (
+            <li key={section.path}>
+              <Link
+                to={section.path}
+                className="group flex h-full flex-col items-center gap-3 rounded-md border bg-card px-6 py-8 text-center transition-all outline-none hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <span className="flex size-16 items-center justify-center rounded-full bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon aria-hidden className="size-7" strokeWidth={1.5} />
+                </span>
+                <span className="font-heading text-base tracking-[0.16em] uppercase">
+                  {section.label}
+                </span>
+                <span className="text-sm text-muted-foreground">{section.description}</span>
+                <span className="mt-auto inline-flex items-center gap-1 pt-2 font-heading text-xs font-medium tracking-wider text-primary uppercase">
+                  Ver sección
+                  <ArrowRight
+                    aria-hidden
+                    className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                  />
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+        {UPCOMING.map(({ label, description, icon: Icon }) => (
+          <li key={label}>
+            <div className="flex h-full flex-col items-center gap-3 rounded-md border border-dashed px-6 py-8 text-center text-muted-foreground">
+              <span className="flex size-16 items-center justify-center rounded-full bg-secondary">
+                <Icon aria-hidden className="size-7" strokeWidth={1.5} />
+              </span>
+              <span className="font-heading text-base tracking-[0.16em] uppercase">{label}</span>
+              <span className="text-sm">{description}</span>
+              <span className="mt-auto rounded-sm bg-accent px-2 py-0.5 font-heading text-[0.7rem] tracking-wider text-accent-foreground uppercase">
+                Próximamente
+              </span>
+            </div>
           </li>
         ))}
       </ul>

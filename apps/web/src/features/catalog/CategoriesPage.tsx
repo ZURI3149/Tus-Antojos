@@ -7,6 +7,7 @@ import {
 } from '@tus-antojos/shared';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -20,12 +21,14 @@ export function CategoriesPage() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-6">
       <CatalogNav />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">Categorías</h1>
-        {!creating && <Button onClick={() => setCreating(true)}>Nueva categoría</Button>}
-      </div>
+      <PageHeader
+        eyebrow="Catálogo"
+        title="Categorías"
+        description="Agrupan los productos en la caja, en el orden que elijas."
+        actions={!creating && <Button onClick={() => setCreating(true)}>Nueva categoría</Button>}
+      />
 
       {creating && <NewCategory onDone={() => setCreating(false)} />}
 
@@ -34,9 +37,9 @@ export function CategoriesPage() {
         <p className="text-sm text-muted-foreground">Todavía no hay categorías.</p>
       )}
       {categories.data && categories.data.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="relative overflow-x-auto rounded-md border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-left">
+            <thead className="border-b bg-secondary text-left">
               <tr>
                 <th className="w-24 px-3 py-2 font-medium">Orden</th>
                 <th className="px-3 py-2 font-medium">Nombre</th>
@@ -170,7 +173,7 @@ function CategoryForm({
       aria-label={label}
       onSubmit={submit}
       noValidate
-      className="flex flex-wrap items-start gap-3 rounded-lg border p-3"
+      className="flex flex-wrap items-start gap-3 rounded-md border-l-4 border-primary bg-secondary/60 p-4"
     >
       <Field data-invalid={!!errors.name} className="min-w-48 flex-1">
         <FieldLabel htmlFor={id('name')}>Nombre</FieldLabel>

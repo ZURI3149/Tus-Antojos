@@ -50,7 +50,7 @@ export function RecipeEditor({
             <div className="min-w-40 flex-1">
               <select
                 aria-label={`Insumo ${n}`}
-                className={selectClassName}
+                className={`${selectClassName} w-full`}
                 aria-invalid={!!rowErrors?.ingredientId}
                 {...form.register(`recipe.${index}.ingredientId`, {
                   onChange: (event: { target: { value: string } }) => {

@@ -26,7 +26,7 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'any',
-        theme_color: '#171717',
+        theme_color: '#ab0909',
         background_color: '#ffffff',
         categories: ['business', 'food', 'productivity'],
         icons: [

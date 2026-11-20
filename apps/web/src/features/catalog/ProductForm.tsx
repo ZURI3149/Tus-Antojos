@@ -161,7 +161,7 @@ export function ProductForm({
           <FieldLabel htmlFor="product-category">Categoría</FieldLabel>
           <select
             id="product-category"
-            className={selectClassName}
+            className={`${selectClassName} w-full`}
             aria-invalid={!!errors.categoryId}
             {...form.register('categoryId')}
           >

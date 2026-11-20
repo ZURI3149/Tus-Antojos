@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, moneyInputSchema, parseMoney } from './money';
+import { formatMoney, formatMoneyInput, moneyInputSchema, parseMoney } from './money';
 
 describe('parseMoney', () => {
   it.each([
@@ -54,5 +54,21 @@ describe('moneyInputSchema', () => {
     const result = moneyInputSchema.safeParse('doce');
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.message).toBe('Ingresa un monto válido, p. ej. 12,50');
+  });
+});
+
+describe('formatMoneyInput', () => {
+  it.each([
+    [1250, '12,50'],
+    [5, '0,05'],
+    [123_456, '1234,56'],
+  ])('%i → %j (sin "Bs" ni separador de miles)', (cents, text) => {
+    expect(formatMoneyInput(cents)).toBe(text);
+  });
+
+  it('parseMoney lo lee de vuelta', () => {
+    for (const cents of [1, 99, 1250, 100_000_000]) {
+      expect(parseMoney(formatMoneyInput(cents))).toBe(cents);
+    }
   });
 });

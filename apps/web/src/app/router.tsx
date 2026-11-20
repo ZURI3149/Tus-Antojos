@@ -4,6 +4,8 @@ import { AdminPage } from '@/features/admin/AdminPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { CategoriesPage } from '@/features/catalog/CategoriesPage';
 import { IngredientsPage } from '@/features/catalog/IngredientsPage';
+import { NewProductPage, ProductEditPage } from '@/features/catalog/ProductEditPage';
+import { ProductsPage } from '@/features/catalog/ProductsPage';
 import { KitchenPage } from '@/features/kitchen/KitchenPage';
 import { PosPage } from '@/features/pos/PosPage';
 import { UsersPage } from '@/features/users/UsersPage';
@@ -47,6 +49,9 @@ export const routes: RouteObject[] = [
                   { path: `${adminSection.path}/usuarios`, element: <UsersPage /> },
                   { path: `${adminSection.path}/categorias`, element: <CategoriesPage /> },
                   { path: `${adminSection.path}/insumos`, element: <IngredientsPage /> },
+                  { path: `${adminSection.path}/productos`, element: <ProductsPage /> },
+                  { path: `${adminSection.path}/productos/nuevo`, element: <NewProductPage /> },
+                  { path: `${adminSection.path}/productos/:id`, element: <ProductEditPage /> },
                 ],
               },
             ],

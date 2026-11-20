@@ -2,12 +2,14 @@ import type {
   Category,
   CreateCategory,
   CreateIngredient,
+  CreateProduct,
   Ingredient,
   Product,
   UpdateCategory,
   UpdateIngredient,
+  UpdateProduct,
 } from '@tus-antojos/shared';
-import { catalogRuleMessage } from '@tus-antojos/shared';
+import { catalogRuleMessage, createProductSchema } from '@tus-antojos/shared';
 import type { CatalogReader } from '@/features/catalog/reader';
 import { ApiError } from '@/lib/api-client';
 
@@ -64,7 +66,30 @@ export function seedCatalog(): CatalogData {
     createdAt: NOW,
     updatedAt: NOW,
   };
-  return { categories: [helados, bebidas], ingredients: [leche, azucar], products: [cono] };
+  /** Inactivo y sin receta: no se puede activar. */
+  const malteada: Product = {
+    ...cono,
+    id: '00000000-0000-4000-8000-0000000000f2',
+    categoryId: bebidas.id,
+    name: 'Malteada',
+    description: 'De vainilla',
+    priceCents: 1850,
+    isActive: false,
+    recipe: [],
+  };
+  /** Inactiva: no se ofrece al elegir la categoría de un producto. */
+  const temporada: Category = {
+    ...helados,
+    id: '00000000-0000-4000-8000-0000000000c3',
+    name: 'Temporada',
+    sortOrder: 3,
+    isActive: false,
+  };
+  return {
+    categories: [helados, bebidas, temporada],
+    ingredients: [leche, azucar],
+    products: [cono, malteada],
+  };
 }
 
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -178,7 +203,54 @@ export function createFakeCatalog(data: CatalogData = seedCatalog()) {
       return structuredClone(target);
     }
 
+    if (method === 'POST' && path === '/products') {
+      // Como el ZodValidationPipe de la API: aplica los valores por defecto (inactivo, sin receta).
+      const input: CreateProduct = createProductSchema.parse(body);
+      if (data.products.some((p) => sameName(p.name, input.name))) {
+        throw conflict('Ya existe un producto con ese nombre');
+      }
+      const product: Product = {
+        id: crypto.randomUUID(),
+        ...input,
+        imagePath: null,
+        createdAt: NOW,
+        updatedAt: NOW,
+      };
+      checkProductRules(product);
+      data.products.push(product);
+      return structuredClone(product);
+    }
+
+    const product = path.match(/^\/products\/([^/]+)$/);
+    if (method === 'PATCH' && product) {
+      const target = data.products.find((p) => p.id === product[1]);
+      if (!target) throw new ApiError(404, 'NOT_FOUND', 'Producto no encontrado', undefined, 'r');
+      const changes = body as UpdateProduct;
+      if (
+        changes.name &&
+        data.products.some((p) => p.id !== target.id && sameName(p.name, changes.name!))
+      ) {
+        throw conflict('Ya existe un producto con ese nombre');
+      }
+      checkProductRules({ ...target, ...changes });
+      Object.assign(target, changes);
+      return structuredClone(target);
+    }
+
     return NOT_HANDLED;
+  }
+
+  /** Reglas de un producto activo (triggers de la BD). */
+  function checkProductRules(product: Product) {
+    if (!product.isActive) return;
+    if (product.recipe.length === 0) throw rule('PRODUCT_WITHOUT_RECIPE');
+    const inactive = (id: string) => !data.ingredients.find((i) => i.id === id)?.isActive;
+    if (product.recipe.some((item) => inactive(item.ingredientId))) {
+      throw rule('INGREDIENT_INACTIVE');
+    }
+    if (!data.categories.find((c) => c.id === product.categoryId)?.isActive) {
+      throw rule('CATEGORY_INACTIVE');
+    }
   }
 
   return { reader, handle, data };

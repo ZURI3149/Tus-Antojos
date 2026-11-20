@@ -22,7 +22,7 @@ describe('CategoriesPage', () => {
       .getAllByRole('row')
       .slice(1)
       .map((r) => r.children[1]?.textContent);
-    expect(names).toEqual(['Helados', 'Bebidas']);
+    expect(names).toEqual(['Helados', 'Bebidas', 'Temporada']);
   });
 
   it('crea una categoría y aparece en la lista', async () => {

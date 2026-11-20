@@ -17,6 +17,11 @@ export function formatMoney(cents: number): string {
   return `${cents < 0 ? '-' : ''}Bs ${amount}`;
 }
 
+/** 123456 → "1234,56": el valor inicial de un campo de monto (lo lee `parseMoney`). */
+export function formatMoneyInput(cents: number): string {
+  return formatScaledDecimal(cents, 2, { minDecimals: 2, thousands: false });
+}
+
 /** Campo de formulario con un monto en Bs; su salida son centavos. */
 export const moneyInputSchema = z.string().transform((text, ctx) => {
   const cents = parseMoney(text);

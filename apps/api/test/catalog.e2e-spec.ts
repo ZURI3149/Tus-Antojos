@@ -10,6 +10,7 @@ import { APP_CONFIG } from '../src/config/config.module.js';
 import { loadEnv } from '../src/config/env.schema.js';
 import { CategoriesService } from '../src/modules/catalog/categories.service.js';
 import { IngredientsService } from '../src/modules/catalog/ingredients.service.js';
+import { ProductsService } from '../src/modules/catalog/products.service.js';
 import { SupabaseService } from '../src/supabase/supabase.service.js';
 import { createTestKeys, TEST_SUPABASE_URL } from './support/jwt.js';
 
@@ -26,6 +27,7 @@ const SOME_ID = '00000000-0000-4000-8000-0000000000aa';
 const services = {
   categories: { create: vi.fn(), update: vi.fn() },
   ingredients: { create: vi.fn(), update: vi.fn() },
+  products: { create: vi.fn(), update: vi.fn() },
 };
 
 interface Route {
@@ -66,6 +68,29 @@ const ROUTES: Route[] = [
     handler: services.ingredients.update,
     expectedArgs: [SOME_ID, { unit: 'g' }],
   },
+  {
+    method: 'post',
+    path: '/products',
+    body: { categoryId: SOME_ID, name: ' Cono ', priceCents: 1250 },
+    handler: services.products.create,
+    expectedArgs: [
+      {
+        categoryId: SOME_ID,
+        name: 'Cono',
+        description: '',
+        priceCents: 1250,
+        isActive: false,
+        recipe: [],
+      },
+    ],
+  },
+  {
+    method: 'patch',
+    path: `/products/${SOME_ID}`,
+    body: { priceCents: 1500, description: ' Con chispas ' },
+    handler: services.products.update,
+    expectedArgs: [SOME_ID, { priceCents: 1500, description: 'Con chispas' }],
+  },
 ];
 
 describe('rutas del catálogo (permisos y validación)', () => {
@@ -100,6 +125,8 @@ describe('rutas del catálogo (permisos y validación)', () => {
       .useValue(services.categories)
       .overrideProvider(IngredientsService)
       .useValue(services.ingredients)
+      .overrideProvider(ProductsService)
+      .useValue(services.products)
       .overrideProvider(SupabaseService)
       .useValue({ isDatabaseReachable: async () => true })
       .compile();
@@ -142,6 +169,19 @@ describe('rutas del catálogo (permisos y validación)', () => {
       expect(res.body.error.code).toBe('VALIDATION_ERROR');
       expect(route.handler).not.toHaveBeenCalled();
     });
+  });
+
+  it.each([
+    ['precio en Bs con decimales', { priceCents: 12.5 }],
+    ['precio 0', { priceCents: 0 }],
+    ['campo desconocido (la receta va por su ruta)', { recipe: [] }],
+  ])('PATCH /products/:id con %s → 400', async (_label, body) => {
+    await request(app.getHttpServer())
+      .patch(`/products/${SOME_ID}`)
+      .set('authorization', `Bearer ${tokens.admin}`)
+      .send(body)
+      .expect(400);
+    expect(services.products.update).not.toHaveBeenCalled();
   });
 
   it('un id que no es UUID → 400', async () => {

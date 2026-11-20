@@ -1,7 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { createClient } from '@supabase/supabase-js';
-import { categorySchema, ingredientSchema, type Database } from '@tus-antojos/shared';
+import {
+  categorySchema,
+  ingredientSchema,
+  productSchema,
+  type Database,
+} from '@tus-antojos/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { AppModule } from '../../src/app.module.js';
@@ -186,6 +191,130 @@ describe('catálogo contra Supabase local', () => {
         message: 'El insumo se usa en productos activos',
         details: { reason: 'INGREDIENT_IN_USE', context: { products: [`${PREFIX}Pan`] } },
       });
+    });
+  });
+
+  describe('productos', () => {
+    let categoryId: string;
+    let inactiveCategoryId: string;
+    let ingredientId: string;
+    let productId: string;
+
+    beforeAll(async () => {
+      const { data: categories } = await service
+        .from('categories')
+        .insert([
+          { name: `${PREFIX}Postres`, is_active: true },
+          { name: `${PREFIX}Viejos`, is_active: false },
+        ])
+        .select();
+      categoryId = categories!.find((c) => c.is_active)!.id;
+      inactiveCategoryId = categories!.find((c) => !c.is_active)!.id;
+      const { data: ingredient } = await service
+        .from('ingredients')
+        .insert({ name: `${PREFIX}Crema`, unit: 'ml' })
+        .select()
+        .single();
+      ingredientId = ingredient!.id;
+    });
+
+    it('POST /products crea el producto inactivo y sin receta', async () => {
+      const res = await asAdmin(http().post('/products'))
+        .send({ categoryId, name: `${PREFIX}Copa`, priceCents: 1250 })
+        .expect(201);
+      expect(productSchema.parse(res.body)).toMatchObject({
+        categoryId,
+        name: `${PREFIX}Copa`,
+        description: '',
+        priceCents: 1250,
+        imagePath: null,
+        isActive: false,
+        recipe: [],
+      });
+      productId = res.body.id;
+    });
+
+    it('POST /products con receta la guarda en la misma transacción', async () => {
+      const res = await asAdmin(http().post('/products'))
+        .send({
+          categoryId,
+          name: `${PREFIX}Copa doble`,
+          priceCents: 2000,
+          isActive: true,
+          recipe: [{ ingredientId, quantity: 150 }],
+        })
+        .expect(201);
+      expect(res.body).toMatchObject({ isActive: true, recipe: [{ ingredientId, quantity: 150 }] });
+    });
+
+    it('nombre repetido sin distinguir mayúsculas → 409', async () => {
+      const res = await asAdmin(http().post('/products'))
+        .send({ categoryId, name: `${PREFIX}COPA`, priceCents: 100 })
+        .expect(409);
+      expect(res.body.error.message).toBe('Ya existe un producto con ese nombre');
+    });
+
+    it('una categoría inexistente → 400', async () => {
+      await asAdmin(http().post('/products'))
+        .send({ categoryId: crypto.randomUUID(), name: `${PREFIX}Huérfano`, priceCents: 100 })
+        .expect(400);
+    });
+
+    it('activo sin receta → 422 PRODUCT_WITHOUT_RECIPE y no queda nada (CA-06)', async () => {
+      const res = await asAdmin(http().post('/products'))
+        .send({ categoryId, name: `${PREFIX}Sin receta`, priceCents: 100, isActive: true })
+        .expect(422);
+      expect(res.body.error.details.reason).toBe('PRODUCT_WITHOUT_RECIPE');
+      const { data } = await service
+        .from('products')
+        .select('id')
+        .eq('name', `${PREFIX}Sin receta`);
+      expect(data).toEqual([]);
+    });
+
+    it('PATCH /products/:id edita los datos', async () => {
+      const res = await asAdmin(http().patch(`/products/${productId}`))
+        .send({ name: `${PREFIX}Copa helada`, description: 'Tres bolas', priceCents: 1500 })
+        .expect(200);
+      expect(res.body).toMatchObject({
+        name: `${PREFIX}Copa helada`,
+        description: 'Tres bolas',
+        priceCents: 1500,
+      });
+    });
+
+    it('PATCH: activar sin receta → 422 y sigue inactivo', async () => {
+      const res = await asAdmin(http().patch(`/products/${productId}`))
+        .send({ isActive: true })
+        .expect(422);
+      expect(res.body.error.details.reason).toBe('PRODUCT_WITHOUT_RECIPE');
+      const { data } = await service
+        .from('products')
+        .select('is_active')
+        .eq('id', productId)
+        .single();
+      expect(data!.is_active).toBe(false);
+    });
+
+    it('PATCH: un producto inactivo puede pasar a una categoría inactiva, uno activo no', async () => {
+      await asAdmin(http().patch(`/products/${productId}`))
+        .send({ categoryId: inactiveCategoryId })
+        .expect(200);
+      const { data: active } = await service
+        .from('products')
+        .select('id')
+        .eq('name', `${PREFIX}Copa doble`)
+        .single();
+      const res = await asAdmin(http().patch(`/products/${active!.id}`))
+        .send({ categoryId: inactiveCategoryId })
+        .expect(422);
+      expect(res.body.error.details.reason).toBe('CATEGORY_INACTIVE');
+    });
+
+    it('PATCH de un producto inexistente → 404', async () => {
+      await asAdmin(http().patch(`/products/${crypto.randomUUID()}`))
+        .send({ priceCents: 100 })
+        .expect(404);
     });
   });
 });

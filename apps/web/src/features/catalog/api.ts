@@ -3,9 +3,12 @@ import type {
   Category,
   CreateCategory,
   CreateIngredient,
+  CreateProductInput,
   Ingredient,
+  Product,
   UpdateCategory,
   UpdateIngredient,
+  UpdateProduct,
 } from '@tus-antojos/shared';
 import { toast } from 'sonner';
 import type { ApiError } from '@/lib/api-client';
@@ -102,4 +105,26 @@ export function useUpdateIngredient() {
 export function useProducts() {
   const reader = useCatalogReader();
   return useQuery({ queryKey: catalogKeys.products, queryFn: () => reader.products() });
+}
+
+export function useCreateProduct() {
+  const api = useApi();
+  const invalidate = useInvalidateCatalog();
+  return useMutation({
+    /** Lo omitido toma el valor por defecto en la API (inactivo, sin receta). */
+    mutationFn: (input: CreateProductInput) => api.post<Product>('/products', input),
+    onSuccess: () => toast.success('Producto creado'),
+    onSettled: invalidate,
+  });
+}
+
+export function useUpdateProduct() {
+  const api = useApi();
+  const invalidate = useInvalidateCatalog();
+  return useMutation({
+    mutationFn: ({ id, changes }: { id: string; changes: UpdateProduct }) =>
+      api.patch<Product>(`/products/${id}`, changes),
+    onSuccess: () => toast.success('Producto actualizado'),
+    onSettled: invalidate,
+  });
 }

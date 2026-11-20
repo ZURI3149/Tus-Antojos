@@ -102,8 +102,11 @@ export type SetRecipe = z.infer<typeof setRecipeSchema>;
 
 // --- Productos ----------------------------------------------------------------
 
-const description = z.string().trim().max(500, { error: 'Máximo 500 caracteres' });
-const priceCents = z
+export const productDescriptionSchema = z
+  .string()
+  .trim()
+  .max(500, { error: 'Máximo 500 caracteres' });
+export const priceCentsSchema = z
   .number()
   .int({ error: 'El precio debe estar en centavos enteros' })
   .positive({ error: 'El precio debe ser mayor a 0' })
@@ -113,8 +116,8 @@ const categoryId = z.uuid({ error: 'Elige una categoría' });
 export const createProductSchema = z.object({
   categoryId,
   name: catalogNameSchema,
-  description: description.default(''),
-  priceCents,
+  description: productDescriptionSchema.default(''),
+  priceCents: priceCentsSchema,
   isActive: z.boolean().default(false),
   recipe: recipeSchema.default([]),
 });
@@ -126,8 +129,8 @@ export const updateProductSchema = z
   .strictObject({
     categoryId: categoryId.optional(),
     name: catalogNameSchema.optional(),
-    description: description.optional(),
-    priceCents: priceCents.optional(),
+    description: productDescriptionSchema.optional(),
+    priceCents: priceCentsSchema.optional(),
     isActive: z.boolean().optional(),
   })
   .refine(hasChanges, AT_LEAST_ONE_CHANGE);

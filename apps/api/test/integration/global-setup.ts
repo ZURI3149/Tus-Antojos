@@ -6,6 +6,7 @@ export interface LocalSupabase {
   apiUrl: string;
   anonKey: string;
   serviceRoleKey: string;
+  dbUrl: string;
 }
 
 declare module 'vitest' {
@@ -36,6 +37,7 @@ export default function setup(project: TestProject): void {
     apiUrl: vars.API_URL ?? '',
     anonKey: vars.PUBLISHABLE_KEY || vars.ANON_KEY || '',
     serviceRoleKey: vars.SERVICE_ROLE_KEY ?? '',
+    dbUrl: vars.DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
   };
   if (!env.apiUrl || !env.anonKey || !env.serviceRoleKey) {
     throw new Error('`supabase status` no devolvió API_URL, la clave pública o SERVICE_ROLE_KEY');

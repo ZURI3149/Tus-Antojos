@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INGREDIENT_UNITS } from '../catalog/units';
+import { INVENTORY_MOVEMENT_TYPES } from '../inventory/inventory.schema';
 import { APP_ROLES } from '../roles';
 import { Constants } from './database.types';
 
@@ -12,5 +13,11 @@ describe('tipos generados de la base de datos', () => {
 
   it('el enum ingredient_unit de PostgreSQL coincide con INGREDIENT_UNITS', () => {
     expect([...Constants.public.Enums.ingredient_unit]).toEqual([...INGREDIENT_UNITS]);
+  });
+
+  it('el enum inventory_movement_type de PostgreSQL coincide con INVENTORY_MOVEMENT_TYPES', () => {
+    expect([...Constants.public.Enums.inventory_movement_type]).toEqual([
+      ...INVENTORY_MOVEMENT_TYPES,
+    ]);
   });
 });

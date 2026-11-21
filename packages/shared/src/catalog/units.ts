@@ -60,12 +60,13 @@ export function toDisplayQuantity(
   return { text: String(base), unit };
 }
 
-/** 1500 g → "1,5 kg"; 3 unidad → "3 unidades". */
+/** 1500 g → "1,5 kg"; -1500 g → "-1,5 kg"; 3 unidad → "3 unidades". */
 export function formatQuantity(base: number, unit: IngredientUnit): string {
   if (unit === 'unidad') {
-    return `${formatScaledDecimal(base, 0)} ${base === 1 ? 'unidad' : 'unidades'}`;
+    return `${formatScaledDecimal(base, 0)} ${Math.abs(base) === 1 ? 'unidad' : 'unidades'}`;
   }
   const large = LARGE[unit];
-  if (large && base >= 1000) return `${formatScaledDecimal(base, DECIMALS[large])} ${large}`;
+  if (large && Math.abs(base) >= 1000)
+    return `${formatScaledDecimal(base, DECIMALS[large])} ${large}`;
   return `${formatScaledDecimal(base, 0)} ${unit}`;
 }

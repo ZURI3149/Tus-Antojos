@@ -56,6 +56,10 @@ describe('formatQuantity', () => {
     [1, 'unidad', '1 unidad'],
     [3, 'unidad', '3 unidades'],
     [0, 'g', '0 g'],
+    [-1500, 'g', '-1,5 kg'],
+    [-250, 'g', '-250 g'],
+    [-1, 'unidad', '-1 unidad'],
+    [-2, 'unidad', '-2 unidades'],
   ] as const)('%i %s → %j', (base, unit, text) => {
     expect(formatQuantity(base, unit)).toBe(text);
   });

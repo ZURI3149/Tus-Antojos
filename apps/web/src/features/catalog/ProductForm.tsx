@@ -47,7 +47,7 @@ const recipeRowSchema = z
 const productFormSchema = z.object({
   name: catalogNameSchema,
   description: productDescriptionSchema,
-  categoryId: z.uuid({ error: 'Elige una categoría' }),
+  categoryId: z.guid({ error: 'Elige una categoría' }),
   price: moneyInputSchema.pipe(priceCentsSchema),
   // RHF descarta los campos deshabilitados: el interruptor bloqueado llega como undefined.
   isActive: z.boolean().default(false),

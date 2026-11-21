@@ -26,7 +26,7 @@ export class ProductsController {
 
   @Patch(':id')
   update(
-    @Param('id', new ZodValidationPipe(z.uuid())) id: string,
+    @Param('id', new ZodValidationPipe(z.guid())) id: string,
     @Body(new ZodValidationPipe(updateProductSchema)) body: UpdateProduct,
   ): Promise<Product> {
     return this.products.update(id, body);
@@ -35,7 +35,7 @@ export class ProductsController {
   /** Reemplaza la receta completa. */
   @Put(':id/recipe')
   setRecipe(
-    @Param('id', new ZodValidationPipe(z.uuid())) id: string,
+    @Param('id', new ZodValidationPipe(z.guid())) id: string,
     @Body(new ZodValidationPipe(setRecipeSchema)) body: SetRecipe,
   ): Promise<Product> {
     return this.products.setRecipe(id, body.items);

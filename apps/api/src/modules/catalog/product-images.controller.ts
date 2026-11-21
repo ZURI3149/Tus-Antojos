@@ -10,7 +10,7 @@ import { Roles } from '../../auth/roles.decorator.js';
 import { ZodValidationPipe } from '../../common/zod-validation.pipe.js';
 import { ProductImagesService } from './product-images.service.js';
 
-const productId = new ZodValidationPipe(z.uuid());
+const productId = new ZodValidationPipe(z.guid());
 
 @Roles('admin')
 @Controller('products/:id')

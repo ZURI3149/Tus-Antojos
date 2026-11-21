@@ -26,7 +26,7 @@ export class IngredientsController {
 
   @Patch(':id')
   update(
-    @Param('id', new ZodValidationPipe(z.uuid())) id: string,
+    @Param('id', new ZodValidationPipe(z.guid())) id: string,
     @Body(new ZodValidationPipe(updateIngredientSchema)) body: UpdateIngredient,
   ): Promise<Ingredient> {
     return this.ingredients.update(id, body);

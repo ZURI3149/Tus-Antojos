@@ -11,16 +11,23 @@ import {
 import { Link } from 'react-router';
 import { PageHeader } from '@/components/page-header';
 import { CATALOG_SECTIONS } from '@/features/catalog/sections';
+import { InventoryAlerts } from '@/features/inventory/InventoryAlerts';
 
 const ICONS: Record<string, LucideIcon> = {
   '/admin/productos': Croissant,
   '/admin/categorias': Tags,
   '/admin/insumos': Wheat,
   '/admin/usuarios': Users,
+  '/admin/inventario': Boxes,
 };
 
 const SECTIONS = [
   ...CATALOG_SECTIONS,
+  {
+    path: '/admin/inventario',
+    label: 'Inventario',
+    description: 'Stock, kardex, compras y mermas',
+  },
   {
     path: '/admin/usuarios',
     label: 'Usuarios',
@@ -30,7 +37,6 @@ const SECTIONS = [
 
 /** Módulos que aún no tienen pantalla: se muestran como adelanto, sin enlace. */
 const UPCOMING = [
-  { label: 'Inventario', description: 'Stock, kardex, compras y mermas', icon: Boxes },
   { label: 'Reportes', description: 'Ventas, cierres de caja y consumo', icon: ChartColumn },
 ];
 
@@ -41,8 +47,9 @@ export function AdminPage() {
       <PageHeader
         eyebrow="Panel"
         title="Administración"
-        description="Catálogo y usuarios. Inventario y reportes llegarán después."
+        description="Gestión integral de catálogo, inventario y cuentas de usuario."
       />
+      <InventoryAlerts />
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SECTIONS.map((section) => {
           const Icon = ICONS[section.path] ?? Croissant;

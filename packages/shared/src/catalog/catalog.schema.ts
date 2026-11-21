@@ -40,7 +40,7 @@ export const updateCategorySchema = z
 export type UpdateCategory = z.output<typeof updateCategorySchema>;
 
 export const categorySchema = z.object({
-  id: z.uuid(),
+  id: z.guid(),
   name: z.string(),
   sortOrder: z.number().int(),
   isActive: z.boolean(),
@@ -68,7 +68,7 @@ export const updateIngredientSchema = z
 export type UpdateIngredient = z.output<typeof updateIngredientSchema>;
 
 export const ingredientSchema = z.object({
-  id: z.uuid(),
+  id: z.guid(),
   name: z.string(),
   unit: ingredientUnitSchema,
   isActive: z.boolean(),
@@ -81,7 +81,7 @@ export type Ingredient = z.infer<typeof ingredientSchema>;
 export const MAX_RECIPE_ITEMS = 30;
 
 export const recipeItemSchema = z.object({
-  ingredientId: z.uuid({ error: 'Elige un insumo' }),
+  ingredientId: z.guid({ error: 'Elige un insumo' }),
   quantity: z
     .number()
     .int({ error: 'La cantidad debe ser entera en la unidad base' })
@@ -111,7 +111,7 @@ export const priceCentsSchema = z
   .int({ error: 'El precio debe estar en centavos enteros' })
   .positive({ error: 'El precio debe ser mayor a 0' })
   .max(100_000_000, { error: 'Precio demasiado alto' });
-const categoryId = z.uuid({ error: 'Elige una categoría' });
+const categoryId = z.guid({ error: 'Elige una categoría' });
 
 export const createProductSchema = z.object({
   categoryId,
@@ -137,8 +137,8 @@ export const updateProductSchema = z
 export type UpdateProduct = z.output<typeof updateProductSchema>;
 
 export const productSchema = z.object({
-  id: z.uuid(),
-  categoryId: z.uuid(),
+  id: z.guid(),
+  categoryId: z.guid(),
   name: z.string(),
   description: z.string(),
   priceCents: z.number().int(),

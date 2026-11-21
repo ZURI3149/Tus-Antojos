@@ -39,3 +39,6 @@ pnpm-debug.log*
 # Temporales
 *.tmp
 .database.types.gen.ts
+
+# Agentes y skills locales
+.agents/

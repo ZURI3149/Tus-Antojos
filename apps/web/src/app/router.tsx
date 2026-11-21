@@ -6,6 +6,10 @@ import { CategoriesPage } from '@/features/catalog/CategoriesPage';
 import { IngredientsPage } from '@/features/catalog/IngredientsPage';
 import { NewProductPage, ProductEditPage } from '@/features/catalog/ProductEditPage';
 import { ProductsPage } from '@/features/catalog/ProductsPage';
+import { KardexPage } from '@/features/inventory/KardexPage';
+import { PurchaseForm } from '@/features/inventory/PurchaseForm';
+import { PurchasesPage } from '@/features/inventory/PurchasesPage';
+import { StockPage } from '@/features/inventory/StockPage';
 import { KitchenPage } from '@/features/kitchen/KitchenPage';
 import { PosPage } from '@/features/pos/PosPage';
 import { UsersPage } from '@/features/users/UsersPage';
@@ -52,6 +56,13 @@ export const routes: RouteObject[] = [
                   { path: `${adminSection.path}/productos`, element: <ProductsPage /> },
                   { path: `${adminSection.path}/productos/nuevo`, element: <NewProductPage /> },
                   { path: `${adminSection.path}/productos/:id`, element: <ProductEditPage /> },
+                  { path: `${adminSection.path}/inventario`, element: <StockPage /> },
+                  {
+                    path: `${adminSection.path}/inventario/:ingredientId`,
+                    element: <KardexPage />,
+                  },
+                  { path: `${adminSection.path}/compras`, element: <PurchasesPage /> },
+                  { path: `${adminSection.path}/compras/nueva`, element: <PurchaseForm /> },
                 ],
               },
             ],

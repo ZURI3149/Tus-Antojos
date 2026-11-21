@@ -22,6 +22,18 @@ Element.prototype.setPointerCapture ??= vi.fn();
 Element.prototype.releasePointerCapture ??= vi.fn();
 Element.prototype.hasPointerCapture ??= vi.fn(() => false);
 
+// jsdom no implementa HTMLDialogElement.showModal ni close
+HTMLDialogElement.prototype.showModal ??= function () {
+  this.open = true;
+};
+HTMLDialogElement.prototype.show ??= function () {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close ??= function () {
+  this.open = false;
+  this.dispatchEvent(new Event('close'));
+};
+
 afterEach(() => {
   cleanup();
 });

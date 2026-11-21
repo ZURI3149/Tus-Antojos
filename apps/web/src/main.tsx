@@ -8,6 +8,7 @@ import { createAppRouter } from './app/router';
 import { createProfileFetcher } from './features/auth/profile';
 import { createSupabaseProductImageStorage } from './features/catalog/images';
 import { createSupabaseCatalogReader } from './features/catalog/reader';
+import { createSupabaseInventoryReader } from './features/inventory/reader';
 import { createApiClient } from './lib/api-client';
 import { initWebSentry } from './lib/sentry';
 import { getWebEnv } from './lib/env';
@@ -33,6 +34,7 @@ const services: AppServices = {
   }),
   catalog: createSupabaseCatalogReader(supabase),
   productImages: createSupabaseProductImageStorage(supabase),
+  inventory: createSupabaseInventoryReader(supabase),
 };
 
 const router = createAppRouter();

@@ -59,6 +59,107 @@ export type Database = {
         };
         Relationships: [];
       };
+      inventory_movements: {
+        Row: {
+          balance_avg_unit_cost: number;
+          balance_quantity: number;
+          cost_cents: number;
+          created_at: string;
+          created_by: string | null;
+          id: number;
+          ingredient_id: string;
+          order_id: string | null;
+          purchase_id: string | null;
+          quantity: number;
+          reason: string;
+          type: Database['public']['Enums']['inventory_movement_type'];
+        };
+        ComputedFields: never;
+        Insert: {
+          balance_avg_unit_cost: number;
+          balance_quantity: number;
+          cost_cents: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: never;
+          ingredient_id: string;
+          order_id?: string | null;
+          purchase_id?: string | null;
+          quantity: number;
+          reason?: string;
+          type: Database['public']['Enums']['inventory_movement_type'];
+        };
+        Update: {
+          balance_avg_unit_cost?: number;
+          balance_quantity?: number;
+          cost_cents?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: never;
+          ingredient_id?: string;
+          order_id?: string | null;
+          purchase_id?: string | null;
+          quantity?: number;
+          reason?: string;
+          type?: Database['public']['Enums']['inventory_movement_type'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'inventory_movements_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'inventory_movements_ingredient_id_fkey';
+            columns: ['ingredient_id'];
+            isOneToOne: false;
+            referencedRelation: 'ingredients';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'inventory_movements_purchase_id_fkey';
+            columns: ['purchase_id'];
+            isOneToOne: false;
+            referencedRelation: 'purchases';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      inventory_stock: {
+        Row: {
+          avg_unit_cost: number;
+          ingredient_id: string;
+          min_quantity: number;
+          quantity: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          avg_unit_cost?: number;
+          ingredient_id: string;
+          min_quantity?: number;
+          quantity?: number;
+          updated_at?: string;
+        };
+        Update: {
+          avg_unit_cost?: number;
+          ingredient_id?: string;
+          min_quantity?: number;
+          quantity?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'inventory_stock_ingredient_id_fkey';
+            columns: ['ingredient_id'];
+            isOneToOne: true;
+            referencedRelation: 'ingredients';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       products: {
         Row: {
           category_id: string;
@@ -132,6 +233,82 @@ export type Database = {
         };
         Relationships: [];
       };
+      purchase_items: {
+        Row: {
+          cost_cents: number;
+          ingredient_id: string;
+          purchase_id: string;
+          quantity: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          cost_cents: number;
+          ingredient_id: string;
+          purchase_id: string;
+          quantity: number;
+        };
+        Update: {
+          cost_cents?: number;
+          ingredient_id?: string;
+          purchase_id?: string;
+          quantity?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'purchase_items_ingredient_id_fkey';
+            columns: ['ingredient_id'];
+            isOneToOne: false;
+            referencedRelation: 'ingredients';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'purchase_items_purchase_id_fkey';
+            columns: ['purchase_id'];
+            isOneToOne: false;
+            referencedRelation: 'purchases';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      purchases: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          note: string;
+          purchased_on: string;
+          supplier: string;
+          total_cents: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          note?: string;
+          purchased_on: string;
+          supplier?: string;
+          total_cents: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          note?: string;
+          purchased_on?: string;
+          supplier?: string;
+          total_cents?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'purchases_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       recipe_items: {
         Row: {
           ingredient_id: string;
@@ -192,6 +369,29 @@ export type Database = {
         };
         Returns: undefined;
       };
+      count_stock: {
+        Args: { p_counted: number; p_ingredient_id: string; p_reason: string; p_user_id?: string };
+        Returns: {
+          balance_avg_unit_cost: number;
+          balance_quantity: number;
+          cost_cents: number;
+          created_at: string;
+          created_by: string | null;
+          id: number;
+          ingredient_id: string;
+          order_id: string | null;
+          purchase_id: string | null;
+          quantity: number;
+          reason: string;
+          type: Database['public']['Enums']['inventory_movement_type'];
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'inventory_movements';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_product: {
         Args: {
           p_category_id: string;
@@ -203,11 +403,45 @@ export type Database = {
         };
         Returns: string;
       };
+      record_waste: {
+        Args: { p_ingredient_id: string; p_quantity: number; p_reason: string; p_user_id?: string };
+        Returns: {
+          balance_avg_unit_cost: number;
+          balance_quantity: number;
+          cost_cents: number;
+          created_at: string;
+          created_by: string | null;
+          id: number;
+          ingredient_id: string;
+          order_id: string | null;
+          purchase_id: string | null;
+          quantity: number;
+          reason: string;
+          type: Database['public']['Enums']['inventory_movement_type'];
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'inventory_movements';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      register_purchase: {
+        Args: {
+          p_items: Json;
+          p_note: string;
+          p_purchased_on: string;
+          p_supplier: string;
+          p_user_id?: string;
+        };
+        Returns: string;
+      };
       set_product_recipe: { Args: { p_items: Json; p_product_id: string }; Returns: undefined };
     };
     Enums: {
       app_role: 'cajero' | 'cocina' | 'admin';
       ingredient_unit: 'g' | 'ml' | 'unidad';
+      inventory_movement_type: 'compra' | 'venta' | 'merma' | 'ajuste' | 'anulacion';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -321,6 +555,7 @@ export const Constants = {
     Enums: {
       app_role: ['cajero', 'cocina', 'admin'],
       ingredient_unit: ['g', 'ml', 'unidad'],
+      inventory_movement_type: ['compra', 'venta', 'merma', 'ajuste', 'anulacion'],
     },
   },
 } as const;

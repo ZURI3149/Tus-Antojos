@@ -50,6 +50,10 @@ select
 from auth.users u
 where u.email like '%@tusantojos.test';
 
+-- Forzar la ejecución del trigger diferido on_auth_user_sync_profile para que public.profiles
+-- tenga los usuarios creados antes de que las FKs de otros módulos los referencien.
+set constraints all immediate;
+
 -- =============================================================================
 -- Menú de ejemplo (spec catalog §3.1): 3 categorías, 8 insumos, 6 productos activos
 -- con receta y 1 inactivo. Cantidades en unidad base (g, ml, unidad) y precios en
@@ -122,3 +126,38 @@ insert into public.recipe_items (product_id, ingredient_id, quantity) values
 update public.products set is_active = true
 where id <> '00000000-0000-4000-f000-000000000007'
   and id::text like '00000000-0000-4000-f000-%';
+
+-- =============================================================================
+-- Inventario inicial (spec inventory §3.1 y §5): compra inicial para los 8 insumos,
+-- una merma y configuración de mínimos en 3 insumos (uno queda bajo mínimo).
+-- =============================================================================
+
+select public.register_purchase(
+  current_date,
+  'Distribuidora Central Gastronómica',
+  'Compra inicial de reaprovisionamiento',
+  jsonb_build_array(
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000001', 'quantity', 20000, 'costCents', 10000),
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000002', 'quantity', 5000, 'costCents', 5000),
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000003', 'quantity', 10000, 'costCents', 8000),
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000004', 'quantity', 2000, 'costCents', 4000),
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000005', 'quantity', 2000, 'costCents', 3000),
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000006', 'quantity', 200, 'costCents', 10000),
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000007', 'quantity', 200, 'costCents', 6000),
+    jsonb_build_object('ingredientId', '00000000-0000-4000-e000-000000000008', 'quantity', 50, 'costCents', 20000)
+  ),
+  '00000000-0000-4000-a000-000000000003'::uuid
+);
+
+-- Merma de prueba: 500 g de Frutillas
+select public.record_waste(
+  '00000000-0000-4000-e000-000000000005'::uuid,
+  500,
+  'Frutillas en mal estado detectadas en recepción',
+  '00000000-0000-4000-a000-000000000003'::uuid
+);
+
+-- Stock mínimo configurado en 3 insumos (Frutillas queda bajo mínimo: 1500 g < 3000 g)
+update public.inventory_stock set min_quantity = 5000 where ingredient_id = '00000000-0000-4000-e000-000000000001';
+update public.inventory_stock set min_quantity = 5000 where ingredient_id = '00000000-0000-4000-e000-000000000003';
+update public.inventory_stock set min_quantity = 3000 where ingredient_id = '00000000-0000-4000-e000-000000000005';

@@ -54,6 +54,10 @@ export function catalogFixtures(label: string) {
     const like = `${prefix}%`;
     // Productos primero (sus líneas de receta caen en cascada), luego lo que referencian.
     await sql(`delete from public.products where name like $1`, [like]);
+    await sql(
+      `delete from public.inventory_stock where ingredient_id in (select id from public.ingredients where name like $1)`,
+      [like],
+    );
     await sql(`delete from public.ingredients where name like $1`, [like]);
     await sql(`delete from public.categories where name like $1`, [like]);
   }

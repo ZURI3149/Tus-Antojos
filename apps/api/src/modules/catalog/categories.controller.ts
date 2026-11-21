@@ -26,7 +26,7 @@ export class CategoriesController {
 
   @Patch(':id')
   update(
-    @Param('id', new ZodValidationPipe(z.uuid())) id: string,
+    @Param('id', new ZodValidationPipe(z.guid())) id: string,
     @Body(new ZodValidationPipe(updateCategorySchema)) body: UpdateCategory,
   ): Promise<Category> {
     return this.categories.update(id, body);

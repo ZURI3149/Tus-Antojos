@@ -94,15 +94,38 @@ docs/              Documentación (despliegue)
 .github/workflows/ CI
 ```
 
-## Imagen Docker de la API (opcional)
+## Empaquetado y ejecución con Docker
 
-Para probar la API en un contenedor antes de desplegar:
+El proyecto está completamente preparado para ejecutarse con Docker y Docker Compose:
 
-```bash
-docker build -f apps/api/Dockerfile -t tus-antojos-api:local .
-```
+| Componente           | Dockerfile            | Base                     | Puerto por defecto   | Descripción                                                      |
+| :------------------- | :-------------------- | :----------------------- | :------------------- | :--------------------------------------------------------------- |
+| **API** (`apps/api`) | `apps/api/Dockerfile` | `node:22-bookworm-slim`  | `3000`               | NestJS 12 compilado, healthcheck en `/health`                    |
+| **Web** (`apps/web`) | `apps/web/Dockerfile` | `nginx:1.27-alpine-slim` | `8080` (host) → `80` | Build Vite SPA con Nginx, compresión gzip, caché PWA y seguridad |
 
-Es solo una imagen de prueba local (~500 MB): ni `pnpm dev`, ni las pruebas, ni el CI, ni el despliegue la usan (Railway construye la suya desde el mismo `Dockerfile`). Se puede borrar sin riesgo con `docker image rm tus-antojos-api:local` y volver a construir cuando haga falta. Para ejecutarla y las variables que necesita, ver [docs/deployment.md](docs/deployment.md#3-api-en-railway).
+### Levantar el proyecto con Docker Compose
+
+1. Inicia la base de datos local y asegúrate de tener las claves de entorno:
+   ```bash
+   pnpm db:start
+   pnpm env:local
+   ```
+2. Construye y levanta los servicios:
+   ```bash
+   pnpm docker:up      # equivale a: docker compose up -d --build
+   ```
+3. Acceso a los servicios:
+   - **Web:** [http://localhost:8080](http://localhost:8080)
+   - **API:** [http://localhost:3000](http://localhost:3000) (Estado: [http://localhost:3000/health](http://localhost:3000/health))
+   - **Supabase Studio:** [http://localhost:54323](http://localhost:54323)
+
+4. Otros comandos útiles:
+   ```bash
+   pnpm docker:logs    # ver logs de los contenedores
+   pnpm docker:down    # detener y remover los contenedores
+   ```
+
+Para personalizar variables o apuntar a Supabase Cloud, puedes basarte en [.env.docker.example](.env.docker.example).
 
 ## Despliegue
 

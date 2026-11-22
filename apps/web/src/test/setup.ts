@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom/vitest';
+// IndexedDB en memoria para la cola offline (jsdom no la implementa).
+import 'fake-indexeddb/auto';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
@@ -36,4 +38,6 @@ HTMLDialogElement.prototype.close ??= function () {
 
 afterEach(() => {
   cleanup();
+  // Tickets de la impresora simulada (lib/escpos/transports/simulated.ts).
+  delete window.__tusAntojosPrints;
 });

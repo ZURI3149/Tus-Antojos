@@ -96,6 +96,18 @@ describe('createApiClient', () => {
     expect(s.onForbidden).not.toHaveBeenCalled();
   });
 
+  it('con silentAuthErrors, un 401 lanza el error pero no cierra la sesión (cola offline)', async () => {
+    const s = setup(
+      jsonResponse(401, {
+        error: { code: 'UNAUTHENTICATED', message: 'No autenticado', requestId: 'r' },
+      }),
+    );
+    await expect(
+      s.api.post('/orders', { a: 1 }, undefined, { silentAuthErrors: true }),
+    ).rejects.toMatchObject({ status: 401, code: 'UNAUTHENTICATED' });
+    expect(s.onUnauthorized).not.toHaveBeenCalled();
+  });
+
   it('403 → ApiError y onForbidden con el mensaje', async () => {
     const s = setup(
       jsonResponse(403, {

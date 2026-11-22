@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import * as Sentry from '@sentry/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { clearCachedProfile } from './profile-cache';
 import {
   AuthContext,
   type AuthServices,
@@ -34,8 +35,14 @@ export function AuthProvider({
   });
 
   useEffect(() => {
-    // Supabase emite INITIAL_SESSION al suscribirse: restaura la sesión guardada.
+    let lastUserId: string | null = null;
+    // Supabase emite INITIAL_SESSION al suscribirse: restaura la sesión guardada. Ante un refresh
+    // que falla por red, supabase-js conserva la sesión en vez de emitir SIGNED_OUT (se comprueba
+    // con la red cortada en la E2E offline, OP7).
     const { data } = auth.onAuthStateChange((event, session) => {
+      // En una caja compartida, el perfil guardado no sobrevive a un cierre de sesión real.
+      if (event === 'SIGNED_OUT' && lastUserId) clearCachedProfile(lastUserId);
+      lastUserId = session?.user.id ?? null;
       setState({ status: session ? 'authenticated' : 'unauthenticated', session });
       // Sentry: solo el id del usuario (sin correo). No hace nada si Sentry no está activo.
       Sentry.setUser(session ? { id: session.user.id } : null);

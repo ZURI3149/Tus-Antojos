@@ -29,6 +29,27 @@ function unwrap<T>(result: { data: T | null; error: unknown }, what: string): T 
   return result.data;
 }
 
+interface RecipeRowWithName {
+  ingredient_id: string;
+  quantity: number;
+  ingredients: { name: string } | null;
+}
+
+/**
+ * La BD no guarda un orden de la receta y sin `order` devuelve las filas en un orden arbitrario
+ * (en la práctica, el de los UUID). Se muestran por nombre del insumo: estable y legible.
+ */
+export function sortRecipeRows<T extends RecipeRowWithName>(rows: T[] | undefined): T[] {
+  return [...(rows ?? [])].sort((a, b) => {
+    const an = a.ingredients?.name;
+    const bn = b.ingredients?.name;
+    if (an && bn) return an.localeCompare(bn, 'es', { sensitivity: 'base' });
+    if (an) return -1;
+    if (bn) return 1;
+    return a.ingredient_id.localeCompare(b.ingredient_id);
+  });
+}
+
 export function createSupabaseCatalogReader(db: SupabaseClient<Database>): CatalogReader {
   return {
     async categories() {
@@ -42,9 +63,11 @@ export function createSupabaseCatalogReader(db: SupabaseClient<Database>): Catal
     async products() {
       const result = await db
         .from('products')
-        .select('*, recipe_items(ingredient_id, quantity)')
+        .select('*, recipe_items(ingredient_id, quantity, ingredients(name))')
         .order('name');
-      return unwrap(result, 'los productos').map(toProduct);
+      return unwrap(result, 'los productos').map((row) =>
+        toProduct({ ...row, recipe_items: sortRecipeRows(row.recipe_items) }),
+      );
     },
   };
 }

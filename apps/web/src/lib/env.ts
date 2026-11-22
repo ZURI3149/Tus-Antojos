@@ -9,6 +9,8 @@ const schema = z.object({
   VITE_SENTRY_DSN: z.preprocess((v) => (v === '' ? undefined : v), z.url().optional()),
   VITE_SENTRY_ENVIRONMENT: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
   VITE_APP_VERSION: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+  // Solo E2E: agrega la impresora simulada (SPEC-offline-print OP-D13).
+  VITE_PRINTER_SIMULATED: z.preprocess((v) => v === 'true' || v === true, z.boolean()),
 });
 
 export interface WebEnv {
@@ -18,6 +20,8 @@ export interface WebEnv {
   sentryDsn: string | undefined;
   sentryEnvironment: string | undefined;
   appVersion: string | undefined;
+  /** Agrega la impresora simulada a las opciones (pruebas E2E). */
+  printerSimulated: boolean;
 }
 
 /** Detecta si alguien pegó una clave secreta en el frontend (quedaría pública en el bundle). */
@@ -54,6 +58,7 @@ export function parseWebEnv(source: Record<string, unknown>): WebEnv {
     sentryDsn: env.VITE_SENTRY_DSN,
     sentryEnvironment: env.VITE_SENTRY_ENVIRONMENT,
     appVersion: env.VITE_APP_VERSION,
+    printerSimulated: env.VITE_PRINTER_SIMULATED,
   };
 }
 

@@ -10,7 +10,13 @@ import { OrdersReaderContext, type OrdersReader } from '@/features/pos/reader';
 import { PromotionsReaderContext, type PromotionsReader } from '@/features/promotions/reader';
 import type { ApiClient } from '@/lib/api-client';
 import { ApiContext } from '@/lib/api-context';
+import type { Outbox } from '@/lib/offline/outbox';
+import type { SnapshotStore } from '@/lib/offline/snapshots';
+import type { PrinterTransport } from '@/lib/escpos/transports/types';
 import { createQueryClient } from '@/lib/query-client';
+import { OutboxProvider } from './OutboxProvider';
+import { PrintersContext } from './printers-context';
+import { SnapshotsContext } from './snapshots-context';
 
 /** Dependencias externas de la app (reales en main.tsx, falsas en pruebas). */
 export interface AppServices extends AuthServices {
@@ -25,6 +31,12 @@ export interface AppServices extends AuthServices {
   promotions: PromotionsReader;
   /** Lecturas de pedidos (Supabase + RLS). */
   orders: OrdersReader;
+  /** Cola de pedidos cobrados sin conexión (IndexedDB). */
+  outbox: Outbox;
+  /** Última lectura del catálogo para la caja sin red (IndexedDB). */
+  snapshots: SnapshotStore;
+  /** Formas de imprimir tickets disponibles en esta app (navegador, simulada…). */
+  printers: PrinterTransport[];
 }
 
 export function AppProviders({
@@ -45,7 +57,13 @@ export function AppProviders({
             <InventoryReaderContext.Provider value={services.inventory}>
               <PromotionsReaderContext.Provider value={services.promotions}>
                 <OrdersReaderContext.Provider value={services.orders}>
-                  <AuthProvider services={services}>{children}</AuthProvider>
+                  <SnapshotsContext.Provider value={services.snapshots}>
+                    <PrintersContext.Provider value={services.printers}>
+                      <AuthProvider services={services}>
+                        <OutboxProvider outbox={services.outbox}>{children}</OutboxProvider>
+                      </AuthProvider>
+                    </PrintersContext.Provider>
+                  </SnapshotsContext.Provider>
                 </OrdersReaderContext.Provider>
               </PromotionsReaderContext.Provider>
             </InventoryReaderContext.Provider>

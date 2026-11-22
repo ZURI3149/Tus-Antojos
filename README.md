@@ -79,6 +79,23 @@ Reglas de promociones:
 - **Sin acumulación**: si varias promociones vigentes aplican a un mismo producto, se otorga automáticamente la de mayor beneficio por unidad.
 - **Vigencia en hora de Bolivia**: inicio obligatorio y fin opcional con zona horaria `America/La_Paz` (`-04:00`).
 
+## Caja (cajero)
+
+| Pantalla          | Qué se hace                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `/caja`           | Carrito con promociones aplicadas, cobro en efectivo (con cambio) o QR, e impresión del ticket                            |
+| `/caja/pedidos`   | Pedidos del día: entregar, anular los propios, **Reimprimir** el ticket y la sección **Sin sincronizar** (cola offline)   |
+| `/caja/impresora` | Cómo imprimir en esta caja: navegador o impresora, papel de 80/58 mm, impresión automática, encabezado y ticket de prueba |
+
+**Sin conexión** (detalle en [READMEPWA.md](READMEPWA.md), sección 7):
+
+- Si ya se inició sesión, la caja abre sin red con el catálogo guardado ("Catálogo del dd/mm hh:mm") y el aviso **Modo sin conexión**.
+- Se cobra **solo en efectivo**. El pedido queda en la cola con número provisional `OFF-XXXX` y se imprime con "PENDIENTE DE SINCRONIZAR".
+- Al volver la red los pedidos se envían solos, sin duplicarse. Los que el servidor rechace quedan **por revisar** en `/caja/pedidos` para reintentarlos o descartarlos con un motivo.
+- Para probarlo en local hace falta el build de producción (en `pnpm dev` el service worker está apagado): `pnpm --filter @tus-antojos/web build && pnpm --filter @tus-antojos/web preview`, y en DevTools → Network marcar **Offline**.
+
+**Impresora**: por defecto se imprime con el diálogo del navegador. Si una impresora térmica muestra símbolos raros en lugar de tildes, activar **Solo caracteres básicos**. La conexión directa por USB/serie (Web Serial / WebUSB) está pendiente de conocer el modelo de impresora.
+
 ## Comandos
 
 ```bash
@@ -87,7 +104,8 @@ pnpm format:check     # Prettier (pnpm format para corregir)
 pnpm typecheck        # TypeScript estricto en todos los paquetes
 pnpm test             # pruebas unitarias (no necesitan Docker)
 pnpm test:db          # pruebas contra Supabase local: permisos, RLS, RPC e integración de la API
-pnpm test:e2e         # Playwright: levanta la API y la web contra Supabase local
+pnpm test:e2e         # Playwright: levanta la API y la web contra Supabase local (incluye el proyecto
+                      # `offline`, que corre sobre el build de producción con service worker)
 pnpm build            # compila shared, api y web
 
 pnpm db:reset         # reinicia la base local (migraciones + seed)

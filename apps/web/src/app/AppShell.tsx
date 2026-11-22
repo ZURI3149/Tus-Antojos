@@ -1,5 +1,6 @@
 import { LogOut } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router';
+import { NetworkBadge } from '@/components/network-badge';
 import { useAuth } from '@/features/auth/auth-context';
 import { useProfile } from '@/features/auth/use-profile';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ export function AppShell() {
             Punto de venta y gestión
           </span>
           <div className="ml-auto flex min-w-0 items-center gap-3">
+            <NetworkBadge />
             <span className="truncate">{profile.fullName || session?.user.email}</span>
             <span
               data-slot="role-badge"

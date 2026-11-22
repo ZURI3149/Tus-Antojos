@@ -10,6 +10,7 @@ export default tseslint.config(
   {
     ignores: [
       '**/dist/**',
+      '**/dist-e2e-offline/**',
       '**/build/**',
       '**/coverage/**',
       '**/node_modules/**',

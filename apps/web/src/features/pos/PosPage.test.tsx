@@ -190,7 +190,7 @@ describe('PosPage', () => {
     });
   });
 
-  it('preserva el clientOrderId para reintento en caso de fallo del servidor', async () => {
+  it('pago QR: ante un fallo del servidor muestra el error y reintenta con el mismo clientOrderId', async () => {
     const { user, api } = open();
     const productCard = await screen.findByRole('button', {
       name: /Agregar Cono simple al pedido/i,
@@ -205,15 +205,15 @@ describe('PosPage', () => {
       new ApiError(500, 'INTERNAL', 'Error temporal del servidor', undefined, 'req-err'),
     );
 
-    // Botón de monto exacto
-    await user.click(screen.getByRole('button', { name: /Exacto/i }));
-    await user.click(screen.getByRole('button', { name: 'Confirmar y Entregar' }));
+    // El QR no se encola sin respuesta del servidor (S7): el cajero reintenta a mano.
+    await user.click(screen.getByRole('radio', { name: /Pago QR/i }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar Pago QR' }));
 
     // Muestra el mensaje de error inline en el diálogo
     expect(await screen.findByRole('alert')).toHaveTextContent('Error temporal del servidor');
 
     // Reintentar la operación
-    await user.click(screen.getByRole('button', { name: 'Confirmar y Entregar' }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar Pago QR' }));
 
     await waitFor(() => {
       expect(api.calls).toHaveBeenCalledTimes(2);

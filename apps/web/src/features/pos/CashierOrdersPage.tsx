@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   Banknote,
   CheckCircle2,
+  Printer,
   Clock,
   QrCode,
   Search,
@@ -26,6 +27,9 @@ import { notifyOrderError, useAdvanceOrderStatus, useOrders } from './api';
 import { CancelOrderDialog } from './CancelOrderDialog';
 import { formatOrderTime, toBoliviaDate } from './format';
 import { OrderStatusBadge } from './OrderStatusBadge';
+import { OutboxPanel } from './OutboxPanel';
+import { usePrintTicket } from './use-print-ticket';
+import { ticketFromOrder } from '@/lib/escpos/ticket';
 import { PosNav } from './PosNav';
 
 type FilterTab = 'todos' | OrderStatus;
@@ -44,6 +48,7 @@ export function CashierOrdersPage() {
   const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
 
   const advanceStatusMutation = useAdvanceOrderStatus();
+  const { printTicket } = usePrintTicket();
 
   const counts = useMemo(() => {
     const res: Record<FilterTab, number> = {
@@ -107,6 +112,8 @@ export function CashierOrdersPage() {
         />
         <PosNav />
       </div>
+
+      <OutboxPanel />
 
       {/* Barra de búsqueda y filtros */}
       <div className="flex flex-col gap-3">
@@ -318,6 +325,17 @@ export function CashierOrdersPage() {
 
                 {/* Acciones */}
                 <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t pt-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-label={`Reimprimir pedido #${order.orderNumber}`}
+                    onClick={() => void printTicket(ticketFromOrder(order, { reprint: true }))}
+                    className="min-h-[44px] font-heading text-xs"
+                  >
+                    <Printer aria-hidden className="size-3.5 mr-1" />
+                    Reimprimir
+                  </Button>
                   {canDeliver && isReady && (
                     <Button
                       type="button"

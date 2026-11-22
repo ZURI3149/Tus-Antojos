@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { formatMoney } from '@tus-antojos/shared';
+import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/auth-context';
 import { createOrder } from '@/features/pos/api';
 import { useApi } from '@/lib/api-context';
 import type { Outbox } from '@/lib/offline/outbox';
 import { createSyncEngine } from '@/lib/offline/sync';
 import type { OutboxEntry } from '@/lib/offline/types';
+import { provisionalOrderLabel } from '@/lib/offline/use-network-status';
 import { createWebLock } from '@/lib/offline/web-lock';
 import { OutboxContext, type OutboxState } from './outbox-context';
 
@@ -40,9 +43,17 @@ export function OutboxProvider({ outbox, children }: { outbox: Outbox; children:
       createSyncEngine({
         outbox,
         send: async (entry) => {
-          await createOrder(api, entry.body);
+          const order = await createOrder(api, entry.body);
+          // La BD manda (SPEC-orders D1): si el precio cambió mientras no había red, se avisa.
+          if (order.totalCents !== entry.charged.totalCents) {
+            toast.warning(
+              `Pedido #${order.orderNumber} (${provisionalOrderLabel(entry.clientOrderId)}) sincronizado con otro total: ${formatMoney(order.totalCents)} (la caja cobró ${formatMoney(entry.charged.totalCents)})`,
+              { duration: 10_000 },
+            );
+          }
         },
         getCurrentUserId: () => userId,
+        isOnline: () => navigator.onLine,
         lock: createWebLock(),
       }),
     [outbox, api, userId],

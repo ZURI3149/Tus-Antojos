@@ -48,3 +48,21 @@ export function initWebSentry(
   });
   return true;
 }
+
+/**
+ * Registra que un pedido cobrado sin conexión se descartó a mano (SPEC-offline-print OP-D7).
+ * Sin datos personales: ni nombre del cajero ni del cliente.
+ */
+export function reportOutboxDiscard(info: {
+  clientOrderId: string;
+  totalCents: number;
+  attempts: number;
+  lastError: string | null;
+  reason: string;
+}): void {
+  Sentry.captureMessage('Pedido offline descartado', {
+    level: 'warning',
+    tags: { area: 'offline-outbox' },
+    extra: info,
+  });
+}

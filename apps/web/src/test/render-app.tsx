@@ -3,15 +3,24 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { AppProviders } from '@/app/providers';
 import { routes } from '@/app/router';
 import { openOfflineDb } from '@/lib/offline/db';
-import { createOutbox } from '@/lib/offline/outbox';
+import { createOutbox, type Outbox } from '@/lib/offline/outbox';
 import { createFakeApi, type FakeApi } from './fake-api';
 import type { FakeAuth } from './fake-auth';
 
+/** Cola offline vacía en una base IndexedDB propia (fake-indexeddb). */
+export function createTestOutbox(): Outbox {
+  return createOutbox(openOfflineDb({ name: `test-${crypto.randomUUID()}` }));
+}
+
 /** Monta la app completa (providers + rutas) en `path`, con servicios falsos. */
-export function renderApp(path: string, fake: FakeAuth, fakeApi: FakeApi = createFakeApi()) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
+export function renderApp(
+  path: string,
+  fake: FakeAuth,
+  fakeApi: FakeApi = createFakeApi(),
   // Cola real sobre fake-indexeddb, en una base propia por prueba.
-  const outbox = createOutbox(openOfflineDb({ name: `test-${crypto.randomUUID()}` }));
+  outbox: Outbox = createTestOutbox(),
+) {
+  const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
     <AppProviders
       services={{

@@ -26,6 +26,7 @@ import { notifyOrderError, useAdvanceOrderStatus, useOrders } from './api';
 import { CancelOrderDialog } from './CancelOrderDialog';
 import { formatOrderTime, toBoliviaDate } from './format';
 import { OrderStatusBadge } from './OrderStatusBadge';
+import { OutboxPanel } from './OutboxPanel';
 import { PosNav } from './PosNav';
 
 type FilterTab = 'todos' | OrderStatus;
@@ -107,6 +108,8 @@ export function CashierOrdersPage() {
         />
         <PosNav />
       </div>
+
+      <OutboxPanel />
 
       {/* Barra de búsqueda y filtros */}
       <div className="flex flex-col gap-3">

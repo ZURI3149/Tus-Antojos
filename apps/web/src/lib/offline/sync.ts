@@ -49,7 +49,7 @@ export interface SyncRunResult {
   /** Entradas pendientes de otro cajero que no se enviaron (OP-D8). */
   otherCashier: number;
   /** Por qué se cortó la ejecución, o `null` si recorrió toda la cola. */
-  stoppedBy: 'transient' | 'unauthorized' | 'no_session' | 'busy' | null;
+  stoppedBy: 'transient' | 'unauthorized' | 'no_session' | 'offline' | 'busy' | null;
 }
 
 export interface SyncEngineOptions {
@@ -60,6 +60,8 @@ export interface SyncEngineOptions {
   getCurrentUserId: () => string | null;
   lock: ExclusiveLock;
   now?: () => Date;
+  /** Si devuelve `false` no se intenta enviar (evita peticiones que fallarán seguro). */
+  isOnline?: () => boolean;
 }
 
 export interface SyncEngine {
@@ -78,6 +80,7 @@ export function createSyncEngine({
   getCurrentUserId,
   lock,
   now = () => new Date(),
+  isOnline = () => true,
 }: SyncEngineOptions): SyncEngine {
   async function drain(userId: string): Promise<SyncRunResult> {
     const result: SyncRunResult = { sent: 0, reviewed: 0, otherCashier: 0, stoppedBy: null };
@@ -125,6 +128,7 @@ export function createSyncEngine({
   async function run(): Promise<SyncRunResult> {
     const userId = getCurrentUserId();
     if (!userId) return { sent: 0, reviewed: 0, otherCashier: 0, stoppedBy: 'no_session' };
+    if (!isOnline()) return { sent: 0, reviewed: 0, otherCashier: 0, stoppedBy: 'offline' };
 
     const locked = await lock(SYNC_LOCK_NAME, () => drain(userId));
     if (!locked.acquired) return { sent: 0, reviewed: 0, otherCashier: 0, stoppedBy: 'busy' };

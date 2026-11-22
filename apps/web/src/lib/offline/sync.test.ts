@@ -234,6 +234,25 @@ describe('sync.run', () => {
     expect((await outbox.get(ids[0]!))?.status).toBe('pendiente');
   });
 
+  it('si el navegador está sin red no intenta enviar ni suma intentos', async () => {
+    const { outbox, ids } = await outboxWith(newEntry());
+    const send = vi.fn(async () => {});
+    const sync = createSyncEngine({
+      outbox,
+      send,
+      now: () => T0,
+      lock: createMemoryLock(),
+      getCurrentUserId: () => CASHIER,
+      isOnline: () => false,
+    });
+
+    const result = await sync.run();
+
+    expect(send).not.toHaveBeenCalled();
+    expect(result.stoppedBy).toBe('offline');
+    expect((await outbox.get(ids[0]!))?.attempts).toBe(0);
+  });
+
   it('sin usuario con sesión no envía nada', async () => {
     const { outbox } = await outboxWith(newEntry());
     const send = vi.fn(async () => {});

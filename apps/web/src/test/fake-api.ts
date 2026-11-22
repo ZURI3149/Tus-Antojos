@@ -4,6 +4,7 @@ import { ApiError, type ApiClient } from '@/lib/api-client';
 import { TEST_USERS } from './fake-auth';
 import { createFakeCatalog, NOT_HANDLED, type FakeCatalog } from './fake-catalog';
 import { createFakeInventory, type FakeInventory } from './fake-inventory';
+import { createFakePromotions, type FakePromotions } from './fake-promotions';
 
 export function seedUsers(): User[] {
   return (Object.keys(TEST_USERS) as (keyof typeof TEST_USERS)[]).map((role) => ({
@@ -25,6 +26,7 @@ export function createFakeApi(
   users: User[] = seedUsers(),
   catalog: FakeCatalog = createFakeCatalog(),
   inventory: FakeInventory = createFakeInventory(catalog),
+  promotions: FakePromotions = createFakePromotions(catalog),
 ) {
   const queue: ApiError[] = [];
   const handle = vi.fn(async (method: string, path: string, body?: unknown): Promise<unknown> => {
@@ -56,6 +58,8 @@ export function createFakeApi(
     if (fromCatalog !== NOT_HANDLED) return fromCatalog;
     const fromInventory = inventory.handle(method, path, body);
     if (fromInventory !== NOT_HANDLED) return fromInventory;
+    const fromPromotions = promotions.handle(method, path, body);
+    if (fromPromotions !== NOT_HANDLED) return fromPromotions;
     throw new Error(`Ruta no simulada: ${method} ${path}`);
   });
 
@@ -73,6 +77,7 @@ export function createFakeApi(
     users,
     catalog,
     inventory,
+    promotions,
     /** La próxima llamada falla con este error. */
     failNext(error: ApiError) {
       queue.push(error);

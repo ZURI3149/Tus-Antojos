@@ -90,7 +90,9 @@ insert into public.products (id, category_id, name, description, price_cents) va
   ('00000000-0000-4000-f000-000000000006', '00000000-0000-4000-c000-000000000003',
    'Gaseosa', 'Personal de 500 ml', 700),
   ('00000000-0000-4000-f000-000000000007', '00000000-0000-4000-c000-000000000003',
-   'Malteada de chocolate', 'Fuera de temporada', 1400);
+   'Malteada de chocolate', 'Fuera de temporada', 1400),
+  ('00000000-0000-4000-f000-000000000008', '00000000-0000-4000-c000-000000000002',
+   'Torta artesanal', 'Porción individual de chocolate y crema', 2500);
 
 insert into public.recipe_items (product_id, ingredient_id, quantity) values
   -- Cono simple: 120 ml de leche, 20 g de azúcar, 1 cono
@@ -121,7 +123,11 @@ insert into public.recipe_items (product_id, ingredient_id, quantity) values
   -- Malteada (queda inactiva)
   ('00000000-0000-4000-f000-000000000007', '00000000-0000-4000-e000-000000000001', 300),
   ('00000000-0000-4000-f000-000000000007', '00000000-0000-4000-e000-000000000004', 40),
-  ('00000000-0000-4000-f000-000000000007', '00000000-0000-4000-e000-000000000007', 1);
+  ('00000000-0000-4000-f000-000000000007', '00000000-0000-4000-e000-000000000007', 1),
+  -- Torta artesanal: 150 ml de crema, 30 g de chocolate, 25 g de azúcar
+  ('00000000-0000-4000-f000-000000000008', '00000000-0000-4000-e000-000000000002', 150),
+  ('00000000-0000-4000-f000-000000000008', '00000000-0000-4000-e000-000000000004', 30),
+  ('00000000-0000-4000-f000-000000000008', '00000000-0000-4000-e000-000000000003', 25);
 
 update public.products set is_active = true
 where id <> '00000000-0000-4000-f000-000000000007'
@@ -161,3 +167,38 @@ select public.record_waste(
 update public.inventory_stock set min_quantity = 5000 where ingredient_id = '00000000-0000-4000-e000-000000000001';
 update public.inventory_stock set min_quantity = 5000 where ingredient_id = '00000000-0000-4000-e000-000000000003';
 update public.inventory_stock set min_quantity = 3000 where ingredient_id = '00000000-0000-4000-e000-000000000005';
+
+-- =============================================================================
+-- Promociones de ejemplo (spec promotions §3.1 y PM4):
+-- una vigente (15 % en 2 productos), una programada (Bs 2 de descuento en 7 días) y una vencida.
+-- =============================================================================
+
+select public.create_promotion(
+  'Promo Verano 15%',
+  'porcentaje',
+  15,
+  now() - interval '1 day',
+  array['00000000-0000-4000-f000-000000000001'::uuid, '00000000-0000-4000-f000-000000000002'::uuid],
+  now() + interval '30 days',
+  '00000000-0000-4000-a000-000000000003'::uuid
+);
+
+select public.create_promotion(
+  'Descuento Especial Helados',
+  'monto_fijo',
+  200,
+  now() + interval '7 days',
+  array['00000000-0000-4000-f000-000000000003'::uuid],
+  now() + interval '14 days',
+  '00000000-0000-4000-a000-000000000003'::uuid
+);
+
+select public.create_promotion(
+  'Promo Lanzamiento Pasada',
+  'porcentaje',
+  10,
+  now() - interval '30 days',
+  array['00000000-0000-4000-f000-000000000001'::uuid],
+  now() - interval '1 day',
+  '00000000-0000-4000-a000-000000000003'::uuid
+);

@@ -233,6 +233,85 @@ export type Database = {
         };
         Relationships: [];
       };
+      promotion_products: {
+        Row: {
+          product_id: string;
+          promotion_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          product_id: string;
+          promotion_id: string;
+        };
+        Update: {
+          product_id?: string;
+          promotion_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'promotion_products_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'promotion_products_promotion_id_fkey';
+            columns: ['promotion_id'];
+            isOneToOne: false;
+            referencedRelation: 'promotions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      promotions: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          ends_at: string | null;
+          id: string;
+          is_active: boolean;
+          kind: Database['public']['Enums']['promotion_kind'];
+          name: string;
+          starts_at: string;
+          updated_at: string;
+          value: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          kind: Database['public']['Enums']['promotion_kind'];
+          name: string;
+          starts_at: string;
+          updated_at?: string;
+          value: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          kind?: Database['public']['Enums']['promotion_kind'];
+          name?: string;
+          starts_at?: string;
+          updated_at?: string;
+          value?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'promotions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       purchase_items: {
         Row: {
           cost_cents: number;
@@ -403,6 +482,18 @@ export type Database = {
         };
         Returns: string;
       };
+      create_promotion: {
+        Args: {
+          p_ends_at?: string;
+          p_kind: Database['public']['Enums']['promotion_kind'];
+          p_name: string;
+          p_product_ids: string[];
+          p_starts_at: string;
+          p_user_id?: string;
+          p_value: number;
+        };
+        Returns: string;
+      };
       record_waste: {
         Args: { p_ingredient_id: string; p_quantity: number; p_reason: string; p_user_id?: string };
         Returns: {
@@ -437,11 +528,16 @@ export type Database = {
         Returns: string;
       };
       set_product_recipe: { Args: { p_items: Json; p_product_id: string }; Returns: undefined };
+      update_promotion: {
+        Args: { p_changes: Json; p_id: string; p_product_ids?: string[] };
+        Returns: undefined;
+      };
     };
     Enums: {
       app_role: 'cajero' | 'cocina' | 'admin';
       ingredient_unit: 'g' | 'ml' | 'unidad';
       inventory_movement_type: 'compra' | 'venta' | 'merma' | 'ajuste' | 'anulacion';
+      promotion_kind: 'porcentaje' | 'monto_fijo';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -556,6 +652,7 @@ export const Constants = {
       app_role: ['cajero', 'cocina', 'admin'],
       ingredient_unit: ['g', 'ml', 'unidad'],
       inventory_movement_type: ['compra', 'venta', 'merma', 'ajuste', 'anulacion'],
+      promotion_kind: ['porcentaje', 'monto_fijo'],
     },
   },
 } as const;

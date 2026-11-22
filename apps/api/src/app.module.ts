@@ -10,6 +10,7 @@ import type { AppConfig } from './config/env.schema.js';
 import { HealthController } from './health/health.controller.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { InventoryModule } from './modules/inventory/inventory.module.js';
+import { PromotionsModule } from './modules/promotions/promotions.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { SupabaseModule } from './supabase/supabase.module.js';
 
@@ -26,6 +27,7 @@ import { SupabaseModule } from './supabase/supabase.module.js';
     UsersModule,
     CatalogModule,
     InventoryModule,
+    PromotionsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_FILTER, useClass: HttpExceptionFilter }],

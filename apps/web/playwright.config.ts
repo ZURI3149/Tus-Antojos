@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 5180;
+/** Build de producción con service worker, solo para e2e/offline.spec.ts (OP7). */
+const OFFLINE_PORT = 5181;
 const API_PORT = 3100;
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -41,6 +43,14 @@ const isCI = Boolean(process.env.CI);
 // Para e2e/global-setup.ts (limpieza de usuarios creados por las pruebas).
 process.env.E2E_SUPABASE_URL = supabase.url;
 process.env.E2E_SUPABASE_SERVICE_ROLE_KEY = supabase.serviceRoleKey;
+process.env.E2E_SUPABASE_ANON_KEY = supabase.anonKey;
+process.env.E2E_API_URL = `http://localhost:${API_PORT}`;
+
+const webEnv = {
+  VITE_SUPABASE_URL: supabase.url,
+  VITE_SUPABASE_ANON_KEY: supabase.anonKey,
+  VITE_API_URL: `http://localhost:${API_PORT}`,
+};
 
 export default defineConfig({
   testDir: './e2e',
@@ -57,7 +67,24 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      testIgnore: /offline\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      // En dev (vite) el service worker está apagado: sin él, recargar sin red falla. Este
+      // proyecto usa el build de producción servido con `vite preview` (CE-06, CE-13).
+      name: 'offline',
+      testMatch: /offline\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://localhost:${OFFLINE_PORT}`,
+        serviceWorkers: 'allow',
+      },
+    },
+  ],
   webServer: [
     {
       // API real (compilada) contra Supabase local.
@@ -71,7 +98,7 @@ export default defineConfig({
         NODE_ENV: 'production',
         LOG_LEVEL: 'warn',
         PORT: String(API_PORT),
-        CORS_ORIGINS: `http://localhost:${PORT}`,
+        CORS_ORIGINS: `http://localhost:${PORT},http://localhost:${OFFLINE_PORT}`,
         SUPABASE_URL: supabase.url,
         SUPABASE_SERVICE_ROLE_KEY: supabase.serviceRoleKey,
       },
@@ -81,11 +108,15 @@ export default defineConfig({
       url: `http://localhost:${PORT}`,
       reuseExistingServer: false,
       timeout: 60_000,
-      env: {
-        VITE_SUPABASE_URL: supabase.url,
-        VITE_SUPABASE_ANON_KEY: supabase.anonKey,
-        VITE_API_URL: `http://localhost:${API_PORT}`,
-      },
+      env: webEnv,
+    },
+    {
+      // Build aparte (dist-e2e-offline) para no pisar el `dist` de `pnpm build`.
+      command: `pnpm exec vite build --outDir dist-e2e-offline --emptyOutDir && pnpm exec vite preview --outDir dist-e2e-offline --port ${OFFLINE_PORT} --strictPort`,
+      url: `http://localhost:${OFFLINE_PORT}`,
+      reuseExistingServer: false,
+      timeout: 180_000,
+      env: webEnv,
     },
   ],
 });

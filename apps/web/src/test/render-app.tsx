@@ -17,6 +17,7 @@ export function renderApp(path: string, fake: FakeAuth, fakeApi: FakeApi = creat
         productImages: fakeApi.catalog.images,
         inventory: fakeApi.inventory.reader,
         promotions: fakeApi.promotions.reader,
+        orders: fakeApi.orders.reader,
       }}
     >
       <RouterProvider router={router} />

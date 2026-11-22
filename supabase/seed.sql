@@ -202,3 +202,72 @@ select public.create_promotion(
   now() - interval '1 day',
   '00000000-0000-4000-a000-000000000003'::uuid
 );
+
+-- =============================================================================
+-- Pedidos de ejemplo (spec orders §3.1):
+-- cuatro pedidos del día: pendiente, en_preparacion, listo y anulado (con devolución de stock).
+-- =============================================================================
+
+do $$
+declare
+  v_res jsonb;
+  v_order_id uuid;
+begin
+  -- 1. Pedido pendiente con promoción (efectivo)
+  perform public.create_order(
+    '00000000-0000-4000-d000-000000000001'::uuid,
+    jsonb_build_array(
+      jsonb_build_object(
+        'productId', '00000000-0000-4000-f000-000000000001',
+        'quantity', 2,
+        'note', 'Servir en conos frescos'
+      )
+    ),
+    'efectivo',
+    '00000000-0000-4000-a000-000000000001'::uuid
+  );
+
+  -- 2. Pedido en preparación (qr)
+  v_res := public.create_order(
+    '00000000-0000-4000-d000-000000000002'::uuid,
+    jsonb_build_array(
+      jsonb_build_object('productId', '00000000-0000-4000-f000-000000000002', 'quantity', 1),
+      jsonb_build_object('productId', '00000000-0000-4000-f000-000000000005', 'quantity', 1)
+    ),
+    'qr',
+    '00000000-0000-4000-a000-000000000001'::uuid
+  );
+  v_order_id := (v_res->>'id')::uuid;
+  perform public.advance_order_status(v_order_id, 'en_preparacion', '00000000-0000-4000-a000-000000000002'::uuid);
+
+  -- 3. Pedido listo (efectivo)
+  v_res := public.create_order(
+    '00000000-0000-4000-d000-000000000003'::uuid,
+    jsonb_build_array(
+      jsonb_build_object('productId', '00000000-0000-4000-f000-000000000003', 'quantity', 1)
+    ),
+    'efectivo',
+    '00000000-0000-4000-a000-000000000001'::uuid
+  );
+  v_order_id := (v_res->>'id')::uuid;
+  perform public.advance_order_status(v_order_id, 'en_preparacion', '00000000-0000-4000-a000-000000000002'::uuid);
+  perform public.advance_order_status(v_order_id, 'listo', '00000000-0000-4000-a000-000000000002'::uuid);
+
+  -- 4. Pedido anulado (con reversión de insumos en kardex)
+  v_res := public.create_order(
+    '00000000-0000-4000-d000-000000000004'::uuid,
+    jsonb_build_array(
+      jsonb_build_object('productId', '00000000-0000-4000-f000-000000000001', 'quantity', 1)
+    ),
+    'efectivo',
+    '00000000-0000-4000-a000-000000000001'::uuid
+  );
+  v_order_id := (v_res->>'id')::uuid;
+  perform public.cancel_order(
+    v_order_id,
+    'Cliente canceló el pedido antes de preparación',
+    '00000000-0000-4000-a000-000000000001'::uuid,
+    '00000000-0000-4000-a000-000000000001'::uuid
+  );
+end;
+$$;

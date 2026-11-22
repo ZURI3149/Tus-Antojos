@@ -28,11 +28,11 @@ export class ApiError extends Error {
 }
 
 export interface ApiClient {
-  get<T>(path: string): Promise<T>;
-  post<T>(path: string, body: unknown): Promise<T>;
-  patch<T>(path: string, body: unknown): Promise<T>;
-  put<T>(path: string, body: unknown): Promise<T>;
-  delete<T>(path: string): Promise<T>;
+  get<T>(path: string, headers?: Record<string, string>): Promise<T>;
+  post<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T>;
+  patch<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T>;
+  put<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T>;
+  delete<T>(path: string, headers?: Record<string, string>): Promise<T>;
 }
 
 interface ApiClientOptions {
@@ -50,11 +50,21 @@ interface ApiClientOptions {
 export function createApiClient(options: ApiClientOptions): ApiClient {
   const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
 
-  async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  async function request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+    customHeaders?: Record<string, string>,
+  ): Promise<T> {
     const headers = new Headers({ 'x-request-id': crypto.randomUUID() });
     const token = await options.getAccessToken();
     if (token) headers.set('authorization', `Bearer ${token}`);
     if (body !== undefined) headers.set('content-type', 'application/json');
+    if (customHeaders) {
+      for (const [key, value] of Object.entries(customHeaders)) {
+        headers.set(key, value);
+      }
+    }
 
     let response: Response;
     try {
@@ -95,11 +105,11 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   }
 
   return {
-    get: (path) => request('GET', path),
-    post: (path, body) => request('POST', path, body),
-    patch: (path, body) => request('PATCH', path, body),
-    put: (path, body) => request('PUT', path, body),
-    delete: (path) => request('DELETE', path),
+    get: (path, headers) => request('GET', path, undefined, headers),
+    post: (path, body, headers) => request('POST', path, body, headers),
+    patch: (path, body, headers) => request('PATCH', path, body, headers),
+    put: (path, body, headers) => request('PUT', path, body, headers),
+    delete: (path, headers) => request('DELETE', path, undefined, headers),
   };
 }
 

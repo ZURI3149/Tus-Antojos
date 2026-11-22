@@ -1,0 +1,112 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  orderRuleMessage,
+  type AdvanceOrderStatusInput,
+  type CancelOrderInput,
+  type CreateOrderInput,
+  type Order,
+  type OrderRule,
+  type OrderStatus,
+} from '@tus-antojos/shared';
+import type { ApiClient, ApiError } from '@/lib/api-client';
+import { useApi } from '@/lib/api-context';
+import { notifyError } from '@/lib/notify-error';
+import { useOrdersReader } from './reader';
+
+export const orderKeys = {
+  all: ['orders'] as const,
+  list: (filters?: { businessDate?: string; status?: OrderStatus }) =>
+    ['orders', 'list', filters] as const,
+  detail: (id: string) => ['orders', 'detail', id] as const,
+};
+
+export function describeOrderError(error: ApiError): string {
+  const reason = error.reason as OrderRule | 'STOCK_INSUFFICIENT' | undefined;
+  if (reason === 'STOCK_INSUFFICIENT') {
+    return 'Stock insuficiente de ingredientes para este pedido';
+  }
+  if (reason) {
+    const msg = orderRuleMessage(reason as OrderRule);
+    if (msg) return msg;
+  }
+  return error.message;
+}
+
+export const notifyOrderError = (error: unknown) => notifyError(error, describeOrderError);
+
+export function useOrders(filters?: { businessDate?: string; status?: OrderStatus }) {
+  const reader = useOrdersReader();
+  return useQuery({
+    queryKey: orderKeys.list(filters),
+    queryFn: () => reader.orders(filters),
+  });
+}
+
+export function useOrder(id: string) {
+  const reader = useOrdersReader();
+  return useQuery({
+    queryKey: orderKeys.detail(id),
+    queryFn: () => reader.order(id),
+    enabled: Boolean(id),
+  });
+}
+
+export async function createOrder(api: ApiClient, input: CreateOrderInput): Promise<Order> {
+  return api.post<Order>('/orders', input, {
+    'idempotency-key': input.clientOrderId,
+  });
+}
+
+export async function advanceOrderStatus(
+  api: ApiClient,
+  id: string,
+  input: AdvanceOrderStatusInput,
+): Promise<Order> {
+  return api.post<Order>(`/orders/${id}/status`, input);
+}
+
+export async function cancelOrder(
+  api: ApiClient,
+  id: string,
+  input: CancelOrderInput,
+): Promise<Order> {
+  return api.post<Order>(`/orders/${id}/cancel`, input);
+}
+
+export function useCreateOrder() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateOrderInput) => createOrder(api, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      // El pedido descuenta inventario por kardex
+      void queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+}
+
+export function useAdvanceOrderStatus() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: AdvanceOrderStatusInput }) =>
+      advanceOrderStatus(api, id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: orderKeys.all });
+    },
+  });
+}
+
+export function useCancelOrder() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: CancelOrderInput }) =>
+      cancelOrder(api, id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+}

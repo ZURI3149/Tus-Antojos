@@ -12,6 +12,9 @@ import { PurchasesPage } from '@/features/inventory/PurchasesPage';
 import { StockPage } from '@/features/inventory/StockPage';
 import { KitchenPage } from '@/features/kitchen/KitchenPage';
 import { PosPage } from '@/features/pos/PosPage';
+import { NewPromotionPage } from '@/features/promotions/NewPromotionPage';
+import { PromotionEditPage } from '@/features/promotions/PromotionEditPage';
+import { PromotionsPage } from '@/features/promotions/PromotionsPage';
 import { UsersPage } from '@/features/users/UsersPage';
 import { AppShell } from './AppShell';
 import { NoAccessPage } from './NoAccessPage';
@@ -51,6 +54,15 @@ export const routes: RouteObject[] = [
                 children: [
                   { path: adminSection.path, element: <AdminPage /> },
                   { path: `${adminSection.path}/usuarios`, element: <UsersPage /> },
+                  { path: `${adminSection.path}/promociones`, element: <PromotionsPage /> },
+                  {
+                    path: `${adminSection.path}/promociones/nueva`,
+                    element: <NewPromotionPage />,
+                  },
+                  {
+                    path: `${adminSection.path}/promociones/:id`,
+                    element: <PromotionEditPage />,
+                  },
                   { path: `${adminSection.path}/categorias`, element: <CategoriesPage /> },
                   { path: `${adminSection.path}/insumos`, element: <IngredientsPage /> },
                   { path: `${adminSection.path}/productos`, element: <ProductsPage /> },

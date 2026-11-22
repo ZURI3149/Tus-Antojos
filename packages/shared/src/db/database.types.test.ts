@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INGREDIENT_UNITS } from '../catalog/units';
 import { INVENTORY_MOVEMENT_TYPES } from '../inventory/inventory.schema';
+import { PROMOTION_KINDS } from '../promotions';
 import { APP_ROLES } from '../roles';
 import { Constants } from './database.types';
 
@@ -19,5 +20,9 @@ describe('tipos generados de la base de datos', () => {
     expect([...Constants.public.Enums.inventory_movement_type]).toEqual([
       ...INVENTORY_MOVEMENT_TYPES,
     ]);
+  });
+
+  it('el enum promotion_kind de PostgreSQL coincide con PROMOTION_KINDS', () => {
+    expect([...Constants.public.Enums.promotion_kind]).toEqual([...PROMOTION_KINDS]);
   });
 });

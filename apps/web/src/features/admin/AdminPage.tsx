@@ -3,6 +3,7 @@ import {
   Boxes,
   ChartColumn,
   Croissant,
+  Percent,
   Tags,
   Users,
   Wheat,
@@ -12,6 +13,8 @@ import { Link } from 'react-router';
 import { PageHeader } from '@/components/page-header';
 import { CATALOG_SECTIONS } from '@/features/catalog/sections';
 import { InventoryAlerts } from '@/features/inventory/InventoryAlerts';
+import { usePromotions } from '@/features/promotions/api';
+import { promotionStatus } from '@tus-antojos/shared';
 
 const ICONS: Record<string, LucideIcon> = {
   '/admin/productos': Croissant,
@@ -19,10 +22,16 @@ const ICONS: Record<string, LucideIcon> = {
   '/admin/insumos': Wheat,
   '/admin/usuarios': Users,
   '/admin/inventario': Boxes,
+  '/admin/promociones': Percent,
 };
 
 const SECTIONS = [
   ...CATALOG_SECTIONS,
+  {
+    path: '/admin/promociones',
+    label: 'Promociones',
+    description: 'Descuentos por porcentaje o monto fijo',
+  },
   {
     path: '/admin/inventario',
     label: 'Inventario',
@@ -42,6 +51,11 @@ const UPCOMING = [
 
 // Panel de administración. Cada módulo agrega aquí sus secciones.
 export function AdminPage() {
+  const promotions = usePromotions();
+  const vigentesCount = promotions.data
+    ? promotions.data.filter((p) => promotionStatus(p) === 'vigente').length
+    : undefined;
+
   return (
     <section className="flex flex-col gap-8">
       <PageHeader
@@ -66,6 +80,11 @@ export function AdminPage() {
                   {section.label}
                 </span>
                 <span className="text-sm text-muted-foreground">{section.description}</span>
+                {section.path === '/admin/promociones' && vigentesCount !== undefined && (
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-heading text-xs font-semibold text-primary">
+                    {vigentesCount} {vigentesCount === 1 ? 'vigente' : 'vigentes'}
+                  </span>
+                )}
                 <span className="mt-auto inline-flex items-center gap-1 pt-2 font-heading text-xs font-medium tracking-wider text-primary uppercase">
                   Ver sección
                   <ArrowRight

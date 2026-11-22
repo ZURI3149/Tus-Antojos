@@ -1,0 +1,400 @@
+[
+  {
+    "id": "porcentaje_simple",
+    "description": "Descuento del 20 % sobre un producto de Bs 25,00",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "20 % en tortas",
+        "kind": "porcentaje",
+        "value": 20,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "20 % en tortas",
+      "unitDiscountCents": 500
+    }
+  },
+  {
+    "id": "porcentaje_redondeo_abajo",
+    "description": "Redondeo hacia abajo: 33 % de 10 centavos = 3.3 -> 3 centavos",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 10,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "33 % especial",
+        "kind": "porcentaje",
+        "value": 33,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "33 % especial",
+      "unitDiscountCents": 3
+    }
+  },
+  {
+    "id": "porcentaje_redondeo_arriba",
+    "description": "Redondeo de mitad hacia arriba: 35 % de 10 centavos = 3.5 -> 4 centavos",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 10,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "35 % mitad hacia arriba",
+        "kind": "porcentaje",
+        "value": 35,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "35 % mitad hacia arriba",
+      "unitDiscountCents": 4
+    }
+  },
+  {
+    "id": "porcentaje_100",
+    "description": "100 % de descuento deja el producto gratis (descuento igual al precio)",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "100 % gratis",
+        "kind": "porcentaje",
+        "value": 100,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "100 % gratis",
+      "unitDiscountCents": 2500
+    }
+  },
+  {
+    "id": "monto_fijo_simple",
+    "description": "Descuento de Bs 5,00 (500 centavos) sobre Bs 25,00",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Rebaja Bs 5",
+        "kind": "monto_fijo",
+        "value": 500,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "Rebaja Bs 5",
+      "unitDiscountCents": 500
+    }
+  },
+  {
+    "id": "monto_fijo_recorte",
+    "description": "Monto fijo mayor al precio se recorta al precio (Bs 30 de descuento sobre Bs 25 -> 2500)",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Rebaja Bs 30",
+        "kind": "monto_fijo",
+        "value": 3000,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "Rebaja Bs 30",
+      "unitDiscountCents": 2500
+    }
+  },
+  {
+    "id": "borde_vigencia_inicio_exacto",
+    "description": "Instante exactamente igual a startsAt: la promoción está vigente",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T10:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Inicio exacto",
+        "kind": "porcentaje",
+        "value": 10,
+        "startsAt": "2026-11-20T10:00:00-04:00",
+        "endsAt": "2026-11-25T10:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "Inicio exacto",
+      "unitDiscountCents": 250
+    }
+  },
+  {
+    "id": "borde_vigencia_antes_inicio",
+    "description": "Instante anterior a startsAt: promoción programada (no aplica)",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T09:59:59.999-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Aún no empieza",
+        "kind": "porcentaje",
+        "value": 10,
+        "startsAt": "2026-11-20T10:00:00-04:00",
+        "endsAt": "2026-11-25T10:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": null
+  },
+  {
+    "id": "borde_vigencia_fin_exacto",
+    "description": "Instante exactamente igual a endsAt: ya venció (endsAt es exclusivo, no aplica)",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-25T10:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Fin exacto vencido",
+        "kind": "porcentaje",
+        "value": 10,
+        "startsAt": "2026-11-20T10:00:00-04:00",
+        "endsAt": "2026-11-25T10:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": null
+  },
+  {
+    "id": "borde_vigencia_antes_fin",
+    "description": "Instante justo antes de endsAt: aún vigente (aplica)",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-25T09:59:59.999-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Último segundo",
+        "kind": "porcentaje",
+        "value": 10,
+        "startsAt": "2026-11-20T10:00:00-04:00",
+        "endsAt": "2026-11-25T10:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "Último segundo",
+      "unitDiscountCents": 250
+    }
+  },
+  {
+    "id": "sin_fecha_fin",
+    "description": "endsAt es null: la promoción no tiene fin y sigue vigente",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2000,
+    "at": "2027-01-01T00:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Permanente",
+        "kind": "porcentaje",
+        "value": 15,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": null,
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "Permanente",
+      "unitDiscountCents": 300
+    }
+  },
+  {
+    "id": "desactivada_no_aplica",
+    "description": "Promoción con isActive = false se ignora aunque esté dentro de fechas",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Desactivada",
+        "kind": "porcentaje",
+        "value": 50,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": false,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": null
+  },
+  {
+    "id": "desempate_mayor_descuento",
+    "description": "Entre dos promociones vigentes gana la que da mayor descuento por unidad",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2500,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "10 % en tortas",
+        "kind": "porcentaje",
+        "value": 10,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      },
+      {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "name": "25 % en tortas",
+        "kind": "porcentaje",
+        "value": 25,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "22222222-2222-2222-2222-222222222222",
+      "name": "25 % en tortas",
+      "unitDiscountCents": 625
+    }
+  },
+  {
+    "id": "desempate_mismo_descuento_gana_mas_antigua",
+    "description": "Mismo descuento: desempata la que tiene startsAt más antiguo",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 2000,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "name": "Reciente Bs 4",
+        "kind": "monto_fijo",
+        "value": 400,
+        "startsAt": "2026-11-19T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      },
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Antigua Bs 4",
+        "kind": "monto_fijo",
+        "value": 400,
+        "startsAt": "2026-11-15T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "11111111-1111-1111-1111-111111111111",
+      "name": "Antigua Bs 4",
+      "unitDiscountCents": 400
+    }
+  },
+  {
+    "id": "desempate_mismo_descuento_misma_fecha_gana_menor_id",
+    "description": "Mismo descuento y mismo startsAt: desempata lexicográficamente por id menor",
+    "productId": "00000000-0000-0000-0000-000000000001",
+    "priceCents": 1000,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        "name": "Promo B",
+        "kind": "porcentaje",
+        "value": 10,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      },
+      {
+        "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "name": "Promo A",
+        "kind": "porcentaje",
+        "value": 10,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": {
+      "promotionId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "name": "Promo A",
+      "unitDiscountCents": 100
+    }
+  },
+  {
+    "id": "producto_no_incluido",
+    "description": "La promoción está activa y vigente pero no incluye el producto solicitado",
+    "productId": "99999999-9999-9999-9999-999999999999",
+    "priceCents": 2500,
+    "at": "2026-11-20T12:00:00-04:00",
+    "promotions": [
+      {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Solo para producto 1",
+        "kind": "porcentaje",
+        "value": 20,
+        "startsAt": "2026-11-20T00:00:00-04:00",
+        "endsAt": "2026-11-25T00:00:00-04:00",
+        "isActive": true,
+        "productIds": ["00000000-0000-0000-0000-000000000001"]
+      }
+    ],
+    "expected": null
+  }
+]

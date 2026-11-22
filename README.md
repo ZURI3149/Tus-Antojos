@@ -6,7 +6,7 @@ Sistema de punto de venta y gestión: caja (con modo sin conexión), pantalla de
 
 grupo conformado por 5 personas que nos ayudará a distribuir mejor la organización de responsabilidades, mantener una comunicación directa y reducir la complejidad de desarrollo por esta razón se considera el uso de un arquitectura monolito modular, que permitirá organizar la plataforma en módulos funcionales con responsabilidades definidas. Esta estructura facilitará el mantenimiento, las pruebas y la incorporación de nuevas funcionalidades, como promociones, pagos digitales y reportes administrativos.
 
-> Estado: módulos **platform** (monorepo, autenticación por roles, usuarios, CI y despliegue) y **catalog** (categorías, insumos, productos con receta y foto). Caja, cocina e inventario están en construcción.
+> Estado: módulos **platform** (monorepo, autenticación por roles, usuarios, CI y despliegue), **catalog** (categorías, insumos, productos con receta y foto), **inventory** (stock, compras, mermas y kardex) y **promotions** (descuentos por porcentaje o monto fijo con vigencia y vista previa). Pedidos, caja y cocina en construcción.
 
 ## Stack
 
@@ -65,6 +65,19 @@ Reglas que conviene conocer:
 - **Nada se borra**: categorías, insumos y productos se desactivan, porque las ventas y el kardex los referencian.
 - **Precios en centavos y cantidades en unidad base** (`12,50` → `1250`; `1,5 kg` → `1500 g`).
 - **Fotos**: JPG, PNG o WebP de hasta 2 MB. El navegador las reduce a WebP de máx. 800 px y las sube directo a Supabase Storage con una URL firmada que emite la API; al reemplazarlas se borra la anterior.
+
+## Promociones (administrador)
+
+| Pantalla                                              | Qué se hace                                                                                                       |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/admin/promociones`                                  | Lista con estado (vigente, programada, vencida, desactivada), descuento, vigencia y botón para activar/desactivar |
+| `/admin/promociones/nueva` y `/admin/promociones/:id` | Alta y edición con selector de productos por categoría y vista previa en tiempo real de los precios calculados    |
+
+Reglas de promociones:
+
+- **Descuento por porcentaje o monto fijo**: se calcula por unidad sobre el precio del producto y se redondea al centavo. Un monto fijo mayor al precio se recorta a 0.
+- **Sin acumulación**: si varias promociones vigentes aplican a un mismo producto, se otorga automáticamente la de mayor beneficio por unidad.
+- **Vigencia en hora de Bolivia**: inicio obligatorio y fin opcional con zona horaria `America/La_Paz` (`-04:00`).
 
 ## Comandos
 

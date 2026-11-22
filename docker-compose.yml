@@ -1,0 +1,65 @@
+name: tus-antojos
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: tus-antojos-api:latest
+    container_name: tus-antojos-api
+    restart: unless-stopped
+    ports:
+      - '${API_PORT:-3000}:3000'
+    env_file:
+      - path: apps/api/.env
+        required: false
+      - path: .env.docker
+        required: false
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:8080,http://localhost:80,http://localhost}
+      APP_VERSION: ${APP_VERSION:-docker}
+      # Por defecto se conecta al Supabase local corriendo en el host
+      SUPABASE_URL: ${SUPABASE_URL:-http://host.docker.internal:54321}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e ''fetch("http://localhost:3000/health").then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))''',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-http://localhost:54321}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+        VITE_SENTRY_ENVIRONMENT: ${VITE_SENTRY_ENVIRONMENT:-}
+        VITE_APP_VERSION: ${VITE_APP_VERSION:-docker}
+    image: tus-antojos-web:latest
+    container_name: tus-antojos-web
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-8080}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:80/healthz']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

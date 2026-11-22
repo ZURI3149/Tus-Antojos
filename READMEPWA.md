@@ -12,10 +12,10 @@ Tus Antojos es una aplicación web construida con React y desplegada en Vercel q
 
 La PWA tiene tres componentes principales:
 
-| Componente | Responsabilidad |
-| --- | --- |
-| **Manifest** | Describe el nombre, ícono, idioma, colores y modo de apertura |
-| **Service worker** | Guarda una copia de la aplicación en el navegador y decide cuándo usar archivos guardados |
+| Componente              | Responsabilidad                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Manifest**            | Describe el nombre, ícono, idioma, colores y modo de apertura                                        |
+| **Service worker**      | Guarda una copia de la aplicación en el navegador y decide cuándo usar archivos guardados            |
 | **Capa de integración** | Conecta la actualización del service worker con avisos visibles y permite comprobar versiones nuevas |
 
 Importante: **PWA no significa que todos los datos estén disponibles sin conexión**. La PWA guarda el código y las imágenes, pero el login, la base de datos, Realtime y los pagos necesitan internet.
@@ -62,10 +62,10 @@ Sin embargo, el límite actual es preciso:
 
 React se usa una sola vez para escritorio, tablet y móvil:
 
-| Rol | Uso previsto | Navegador recomendado |
-| --- | --- | --- |
-| Caja | PC o laptop | Chrome o Edge |
-| Cocina | Tablet | Chrome o Edge |
+| Rol            | Uso previsto     | Navegador recomendado                 |
+| -------------- | ---------------- | ------------------------------------- |
+| Caja           | PC o laptop      | Chrome o Edge                         |
+| Cocina         | Tablet           | Chrome o Edge                         |
 | Administración | Laptop o celular | Chrome, Edge o Safari para uso básico |
 
 No hace falta publicar una aplicación separada en Google Play o en App Store, ni mantener binarios distintos para Windows, Android e iOS.
@@ -115,17 +115,17 @@ Si el navegador o el hardware no admite WebUSB/Web Serial, el respaldo funcional
 
 ## 4. Comparación para presentar el proyecto
 
-| Característica | Página web normal | PWA Tus Antojos | App nativa |
-| --- | --- | --- | --- |
-| Se abre con una URL | Sí | Sí | No necesariamente |
-| Se puede instalar | No | Sí | Sí |
-| Tiene ícono propio | Depende | Sí | Sí |
-| Abre sin conexión visualmente | No | Sí, según caché | Sí |
-| Requiere tienda | No | No | Generalmente sí |
-| Usa un solo proyecto web | Sí | Sí | No |
-| Actualización | Al recargar | Con aviso y decisión del usuario | Depende de tienda o actualización |
-| Acceso USB/serial | Limitado | Sí en Chrome/Edge compatibles | Sí |
-| Costo de mantenimiento | Bajo | Bajo | Mayor |
+| Característica                | Página web normal | PWA Tus Antojos                  | App nativa                        |
+| ----------------------------- | ----------------- | -------------------------------- | --------------------------------- |
+| Se abre con una URL           | Sí                | Sí                               | No necesariamente                 |
+| Se puede instalar             | No                | Sí                               | Sí                                |
+| Tiene ícono propio            | Depende           | Sí                               | Sí                                |
+| Abre sin conexión visualmente | No                | Sí, según caché                  | Sí                                |
+| Requiere tienda               | No                | No                               | Generalmente sí                   |
+| Usa un solo proyecto web      | Sí                | Sí                               | No                                |
+| Actualización                 | Al recargar       | Con aviso y decisión del usuario | Depende de tienda o actualización |
+| Acceso USB/serial             | Limitado          | Sí en Chrome/Edge compatibles    | Sí                                |
+| Costo de mantenimiento        | Bajo              | Bajo                             | Mayor                             |
 
 ---
 
@@ -163,17 +163,17 @@ El navegador controla los archivos guardados. React controla la interfaz. Supaba
 
 ## 6. Cómo está configurado
 
-| Archivo | Función |
-| --- | --- |
-| `apps/web/vite.config.ts` | Configura el manifest, Workbox, caché y actualizaciones |
-| `apps/web/src/app/PwaUpdater.tsx` | Registra el service worker y presenta toasts |
-| `apps/web/src/app/PwaUpdater.test.tsx` | Prueba los avisos de actualización y modo offline |
-| `apps/web/src/main.tsx` | Monta `PwaUpdater` dentro de la aplicación React |
-| `apps/web/public/logo.svg` | Logo base para generar los íconos |
-| `apps/web/pwa-assets.config.ts` | Configura la generación de íconos |
-| `apps/web/public/` | Contiene favicon e íconos finales |
-| `apps/web/index.html` | Define título, tema, viewport y etiquetas específicas de iOS |
-| `apps/web/vercel.json` | Configura caché HTTP, SPA, seguridad y permisos USB/serial |
+| Archivo                                | Función                                                      |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `apps/web/vite.config.ts`              | Configura el manifest, Workbox, caché y actualizaciones      |
+| `apps/web/src/app/PwaUpdater.tsx`      | Registra el service worker y presenta toasts                 |
+| `apps/web/src/app/PwaUpdater.test.tsx` | Prueba los avisos de actualización y modo offline            |
+| `apps/web/src/main.tsx`                | Monta `PwaUpdater` dentro de la aplicación React             |
+| `apps/web/public/logo.svg`             | Logo base para generar los íconos                            |
+| `apps/web/pwa-assets.config.ts`        | Configura la generación de íconos                            |
+| `apps/web/public/`                     | Contiene favicon e íconos finales                            |
+| `apps/web/index.html`                  | Define título, tema, viewport y etiquetas específicas de iOS |
+| `apps/web/vercel.json`                 | Configura caché HTTP, SPA, seguridad y permisos USB/serial   |
 
 ### 6.1 Manifest
 
@@ -193,14 +193,14 @@ El archivo final se genera como `manifest.webmanifest` al crear el build:
 
 Los íconos disponibles son:
 
-| Archivo | Tamaño | Uso |
-| --- | ---: | --- |
-| `pwa-64x64.png` | 64 × 64 | Íconos pequeños |
-| `pwa-192x192.png` | 192 × 192 | Android y accesos |
-| `pwa-512x512.png` | 512 × 512 | Splash e instalación |
-| `maskable-icon-512x512.png` | 512 × 512 | Android puede recortarlo de forma segura |
-| `apple-touch-icon-180x180.png` | 180 × 180 | Acceso en iOS |
-| `favicon.ico` | 48 × 48 | Pestaña del navegador |
+| Archivo                        |    Tamaño | Uso                                      |
+| ------------------------------ | --------: | ---------------------------------------- |
+| `pwa-64x64.png`                |   64 × 64 | Íconos pequeños                          |
+| `pwa-192x192.png`              | 192 × 192 | Android y accesos                        |
+| `pwa-512x512.png`              | 512 × 512 | Splash e instalación                     |
+| `maskable-icon-512x512.png`    | 512 × 512 | Android puede recortarlo de forma segura |
+| `apple-touch-icon-180x180.png` | 180 × 180 | Acceso en iOS                            |
+| `favicon.ico`                  |   48 × 48 | Pestaña del navegador                    |
 
 El ícono _maskable_ tiene contenido protegido alrededor del borde para que Android pueda mostrarlo dentro de círculos o cuadrados redondeados sin cortar el logo.
 
@@ -277,12 +277,12 @@ Al terminar el precache se muestra: **“La app ya funciona sin conexión.”**
 
 `vercel.json` asigna reglas distintas según el recurso:
 
-| Recurso | Caché |
-| --- | --- |
-| `/assets/*` | Un año con `immutable` |
-| `/sw.js` y scripts de Workbox | Sin caché persistente, siempre revalidar |
-| `/index.html` | Sin caché persistente, siempre revalidar |
-| `/manifest.webmanifest` | Sin caché persistente y tipo `application/manifest+json` |
+| Recurso                       | Caché                                                    |
+| ----------------------------- | -------------------------------------------------------- |
+| `/assets/*`                   | Un año con `immutable`                                   |
+| `/sw.js` y scripts de Workbox | Sin caché persistente, siempre revalidar                 |
+| `/index.html`                 | Sin caché persistente, siempre revalidar                 |
+| `/manifest.webmanifest`       | Sin caché persistente y tipo `application/manifest+json` |
 
 Esta separación permite conservar archivos con nombre versionado durante mucho tiempo y exigir a Vercel que entrega siempre el HTML, manifest y service worker más recientes.
 
@@ -315,17 +315,17 @@ Con el service worker correctamente instalado:
 
 El límite actual se resume así:
 
-| Función | Sin conexión |
-| --- | --- |
-| Abrir la aplicación y navegar por la interfaz cacheada | Sí, si el precache terminó |
-| Ver fotos guardadas | Sí, según caché |
-| Ver datos recién consultados | No garantizado |
-| Iniciar sesión | No |
-| Consultar Supabase o Realtime | No |
-| Crear pedidos en servidor | No |
-| Pagar por QR | No |
-| Cobrar en efectivo offline | Previsto, no implementado en la cola actual |
-| Sincronizar pedidos sin duplicarlos | Previsto, no implementado |
+| Función                                                | Sin conexión                                |
+| ------------------------------------------------------ | ------------------------------------------- |
+| Abrir la aplicación y navegar por la interfaz cacheada | Sí, si el precache terminó                  |
+| Ver fotos guardadas                                    | Sí, según caché                             |
+| Ver datos recién consultados                           | No garantizado                              |
+| Iniciar sesión                                         | No                                          |
+| Consultar Supabase o Realtime                          | No                                          |
+| Crear pedidos en servidor                              | No                                          |
+| Pagar por QR                                           | No                                          |
+| Cobrar en efectivo offline                             | Previsto, no implementado en la cola actual |
+| Sincronizar pedidos sin duplicarlos                    | Previsto, no implementado                   |
 
 No se deben presentar ventas offline como disponibles hasta que el módulo `offline-print` haya sido implementado y probado.
 
@@ -596,20 +596,20 @@ Sí para navegar e instalar en iOS, pero el flujo de impresión USB/serial está
 
 ## 15. Glosario corto
 
-| Término | Explicación |
-| --- | --- |
-| PWA | Aplicación web instalable y preparada para funcionar con caché |
-| Manifest | Archivo JSON que describe nombre, icono y modo de apertura |
-| Service worker | Script del navegador que controla recursos y caché |
-| Precache | Descarga inicial de recursos antes de perder conexión |
-| Runtime cache | Caché creada al usar recursos posteriores |
-| App shell | Marco visual básico de la aplicación |
-| SPA | Aplicación de una sola página manejada por React Router |
-| IndexedDB | Base de datos local del navegador |
-| StaleWhileRevalidate | Mostrar caché y actualizarla en segundo plano |
-| WebUSB | API para comunicarse con dispositivos USB compatibles |
-| Web Serial | API para comunicarse con dispositivos serie compatibles |
-| ESC/POS | Lenguaje común de impresión térmica |
+| Término              | Explicación                                                    |
+| -------------------- | -------------------------------------------------------------- |
+| PWA                  | Aplicación web instalable y preparada para funcionar con caché |
+| Manifest             | Archivo JSON que describe nombre, icono y modo de apertura     |
+| Service worker       | Script del navegador que controla recursos y caché             |
+| Precache             | Descarga inicial de recursos antes de perder conexión          |
+| Runtime cache        | Caché creada al usar recursos posteriores                      |
+| App shell            | Marco visual básico de la aplicación                           |
+| SPA                  | Aplicación de una sola página manejada por React Router        |
+| IndexedDB            | Base de datos local del navegador                              |
+| StaleWhileRevalidate | Mostrar caché y actualizarla en segundo plano                  |
+| WebUSB               | API para comunicarse con dispositivos USB compatibles          |
+| Web Serial           | API para comunicarse con dispositivos serie compatibles        |
+| ESC/POS              | Lenguaje común de impresión térmica                            |
 
 ---
 

@@ -22,7 +22,11 @@
     "db:stop": "supabase stop",
     "db:reset": "node scripts/ensure-signing-key.mjs && supabase db reset",
     "db:types": "supabase gen types --lang typescript --schema public > packages/shared/src/db/.database.types.gen.ts && mv packages/shared/src/db/.database.types.gen.ts packages/shared/src/db/database.types.ts && prettier --write --log-level warn packages/shared/src/db/database.types.ts",
-    "env:local": "node scripts/setup-local-env.mjs"
+    "env:local": "node scripts/setup-local-env.mjs",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,10 +1,12 @@
-# Contexto de `docker build -f apps/api/Dockerfile .`: solo lo necesario.
+# Contexto de docker build: solo lo necesario.
 **/node_modules
 **/dist
 **/coverage
 **/.env
 **/.env.*
+.env.docker
 !**/.env.example
+!**/.env.*.example
 .git
 .github
 SPEC.md
@@ -12,7 +14,6 @@ specs
 tasks
 docs
 supabase
-apps/web
 scripts
 **/test-results
 **/playwright-report

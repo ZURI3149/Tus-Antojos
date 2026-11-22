@@ -43,7 +43,8 @@ export function OutboxProvider({ outbox, children }: { outbox: Outbox; children:
       createSyncEngine({
         outbox,
         send: async (entry) => {
-          const order = await createOrder(api, entry.body);
+          // Un 401 aquí no cierra la sesión: el motor espera a que se renueve el token.
+          const order = await createOrder(api, entry.body, { silentAuthErrors: true });
           // La BD manda (SPEC-orders D1): si el precio cambió mientras no había red, se avisa.
           if (order.totalCents !== entry.charged.totalCents) {
             toast.warning(

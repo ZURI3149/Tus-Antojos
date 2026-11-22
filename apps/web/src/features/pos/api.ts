@@ -8,7 +8,7 @@ import {
   type Order,
   type OrderRule,
 } from '@tus-antojos/shared';
-import type { ApiClient, ApiError } from '@/lib/api-client';
+import type { ApiClient, ApiError, RequestOptions } from '@/lib/api-client';
 import { useApi } from '@/lib/api-context';
 import { notifyError } from '@/lib/notify-error';
 import { useOrdersReader, type OrdersFilter } from './reader';
@@ -85,10 +85,12 @@ export function useOrderMovements(orderId: string) {
   });
 }
 
-export async function createOrder(api: ApiClient, input: CreateOrderInput): Promise<Order> {
-  return api.post<Order>('/orders', input, {
-    'idempotency-key': input.clientOrderId,
-  });
+export async function createOrder(
+  api: ApiClient,
+  input: CreateOrderInput,
+  options?: RequestOptions,
+): Promise<Order> {
+  return api.post<Order>('/orders', input, { 'idempotency-key': input.clientOrderId }, options);
 }
 
 export async function advanceOrderStatus(

@@ -21,7 +21,9 @@ export function RequireRole({ allowed }: { allowed: readonly AppRole[] }) {
     return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   }
   if (profile.isPending) return <LoadingScreen />;
-  if (profile.isError) {
+  // Con un perfil (aunque sea el guardado) se sigue: una lectura fallida por red no saca al
+  // cajero de la caja (OP-D9). Solo sin ningún perfil se muestra el error.
+  if (profile.isError && profile.data === undefined) {
     return (
       <FullPageMessage
         title="No se pudo cargar tu perfil"

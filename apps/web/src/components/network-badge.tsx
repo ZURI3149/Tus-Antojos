@@ -17,8 +17,8 @@ function pendingText(n: number): string {
 export function NetworkBadgeView({ online, pending }: NetworkBadgeViewProps) {
   const label = !online
     ? pending > 0
-      ? `Sin conexión · ${pendingText(pending)} sin enviar`
-      : 'Sin conexión'
+      ? `Modo sin conexión · ${pendingText(pending)} sin enviar`
+      : 'Modo sin conexión'
     : pending > 0
       ? `Sincronizando ${pendingText(pending)}`
       : 'En línea';

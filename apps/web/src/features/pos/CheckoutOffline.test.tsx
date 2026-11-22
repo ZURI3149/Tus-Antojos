@@ -148,7 +148,7 @@ describe('caja sin conexión (OP3)', () => {
 
     await waitFor(() =>
       expect(document.querySelector('[data-state="offline"]')).toHaveTextContent(
-        'Sin conexión · 1 pedido sin enviar',
+        'Modo sin conexión · 1 pedido sin enviar',
       ),
     );
   });
@@ -158,8 +158,8 @@ describe('NetworkBadgeView', () => {
   it.each([
     [true, 0, 'En línea'],
     [true, 3, 'Sincronizando 3 pedidos'],
-    [false, 0, 'Sin conexión'],
-    [false, 1, 'Sin conexión · 1 pedido sin enviar'],
+    [false, 0, 'Modo sin conexión'],
+    [false, 1, 'Modo sin conexión · 1 pedido sin enviar'],
   ])('online=%s, pendientes=%s → "%s"', (online, pending, text) => {
     render(<NetworkBadgeView online={online} pending={pending} />);
     expect(screen.getByRole('status')).toHaveTextContent(text);

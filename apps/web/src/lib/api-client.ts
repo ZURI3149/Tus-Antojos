@@ -27,9 +27,22 @@ export class ApiError extends Error {
   }
 }
 
+export interface RequestOptions {
+  /**
+   * No cerrar la sesión ante un 401 (solo lanzar el error). Lo usa la cola offline: un token
+   * vencido durante la sincronización espera a que Supabase lo renueve (OP-D5, OP-D9).
+   */
+  silentAuthErrors?: boolean;
+}
+
 export interface ApiClient {
   get<T>(path: string, headers?: Record<string, string>): Promise<T>;
-  post<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T>;
+  post<T>(
+    path: string,
+    body: unknown,
+    headers?: Record<string, string>,
+    options?: RequestOptions,
+  ): Promise<T>;
   patch<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T>;
   put<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T>;
   delete<T>(path: string, headers?: Record<string, string>): Promise<T>;
@@ -55,6 +68,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     path: string,
     body?: unknown,
     customHeaders?: Record<string, string>,
+    requestOptions: RequestOptions = {},
   ): Promise<T> {
     const headers = new Headers({ 'x-request-id': crypto.randomUUID() });
     const token = await options.getAccessToken();
@@ -99,14 +113,15 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           response.headers.get('x-request-id'),
         );
 
-    if (response.status === 401) options.onUnauthorized();
+    if (response.status === 401 && !requestOptions.silentAuthErrors) options.onUnauthorized();
     if (response.status === 403) options.onForbidden(error.message);
     throw error;
   }
 
   return {
     get: (path, headers) => request('GET', path, undefined, headers),
-    post: (path, body, headers) => request('POST', path, body, headers),
+    post: (path, body, headers, requestOptions) =>
+      request('POST', path, body, headers, requestOptions),
     patch: (path, body, headers) => request('PATCH', path, body, headers),
     put: (path, body, headers) => request('PUT', path, body, headers),
     delete: (path, headers) => request('DELETE', path, undefined, headers),

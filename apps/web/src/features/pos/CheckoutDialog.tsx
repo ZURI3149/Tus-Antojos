@@ -4,6 +4,7 @@ import {
   formatMoney,
   formatMoneyInput,
   parseMoney,
+  type CreateOrderInput,
   type Order,
   type PaymentMethod,
 } from '@tus-antojos/shared';
@@ -12,7 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ModalDialog } from '@/components/ui/modal-dialog';
+import { useOutbox } from '@/app/outbox-context';
+import { useAuth } from '@/features/auth/auth-context';
+import { useProfile } from '@/features/auth/use-profile';
 import { ApiError } from '@/lib/api-client';
+import { classifySendError } from '@/lib/offline/sync';
+import { provisionalOrderLabel, useNetworkStatus } from '@/lib/offline/use-network-status';
 import { notifyOrderError, useCreateOrder } from './api';
 import { useOrdersReader } from './reader';
 import type { CartState } from './use-cart';
@@ -21,8 +27,18 @@ export interface CheckoutDialogProps {
   open: boolean;
   onClose: () => void;
   cart: CartState;
-  onSuccess: (orderNumber: number, changeCents: number) => void;
+  onSuccess: (result: CheckoutResult) => void;
 }
+
+export interface CheckoutResult {
+  /** `#12` si la API lo confirmó; `OFF-XXXX` si quedó en la cola offline. */
+  label: string;
+  changeCents: number;
+  /** El pedido quedó en la cola y se enviará al volver la conexión. */
+  queued: boolean;
+}
+
+export const QR_NEEDS_CONNECTION = 'El pago QR necesita conexión';
 
 const COMMON_BILLS_BS = [10, 20, 50, 100, 200];
 
@@ -30,8 +46,14 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo');
   const [cashInput, setCashInput] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isQueuing, setIsQueuing] = useState(false);
 
   const createOrderMutation = useCreateOrder();
+  const online = useNetworkStatus();
+  const { outbox } = useOutbox();
+  const { session } = useAuth();
+  const { data: profile } = useProfile();
+  const isSubmitting = createOrderMutation.isPending || isQueuing;
   const ordersReader = useOrdersReader();
   const totalCents = cart.pricedCart.totalCents;
 
@@ -67,7 +89,39 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
     if (!recovered && paidInCash && cashReceivedCents < chargedCents) {
       toast.warning(`Falta cobrar ${formatMoney(chargedCents - cashReceivedCents)} en efectivo.`);
     }
-    onSuccess(order.orderNumber, paidInCash ? Math.max(0, cashReceivedCents - chargedCents) : 0);
+    onSuccess({
+      label: `#${order.orderNumber}`,
+      changeCents: paidInCash ? Math.max(0, cashReceivedCents - chargedCents) : 0,
+      queued: false,
+    });
+  };
+
+  /**
+   * Guarda en la cola offline una venta en efectivo ya cobrada (SPEC-offline-print OP-D1).
+   * `body` es exactamente lo que se envía (o se habría enviado) a `POST /orders`.
+   */
+  const enqueueSale = async (body: CreateOrderInput) => {
+    const cashierId = session?.user.id;
+    if (!cashierId) throw new Error('No hay una sesión activa para guardar el pedido');
+    setIsQueuing(true);
+    try {
+      const entry = await outbox.enqueue({
+        body,
+        cashierId,
+        cashierName: profile?.fullName ?? session.user.email ?? '',
+        charged: {
+          lines: cart.pricedCart.lines,
+          subtotalCents: cart.pricedCart.subtotalCents,
+          discountCents: cart.pricedCart.discountCents,
+          totalCents,
+          cashReceivedCents,
+          changeCents,
+        },
+      });
+      onSuccess({ label: provisionalOrderLabel(entry.clientOrderId), changeCents, queued: true });
+    } finally {
+      setIsQueuing(false);
+    }
   };
 
   /**
@@ -93,19 +147,47 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
       return;
     }
 
-    try {
-      const order = await createOrderMutation.mutateAsync({
-        clientOrderId: cart.clientOrderId,
-        items: cart.items.map((i) => ({
-          productId: i.productId,
-          quantity: i.quantity,
-          note: i.note,
-        })),
-        paymentMethod,
-      });
+    const body: CreateOrderInput = {
+      clientOrderId: cart.clientOrderId,
+      items: cart.items.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        note: i.note,
+      })),
+      paymentMethod,
+    };
 
+    // Sin red: solo efectivo (S7), y se encola con la hora de la venta (OP-D3).
+    if (!online) {
+      if (!isCash) {
+        setErrorMessage(QR_NEEDS_CONNECTION);
+        return;
+      }
+      try {
+        await enqueueSale({ ...body, createdOfflineAt: new Date().toISOString() });
+      } catch (err) {
+        setErrorMessage(err instanceof Error ? err.message : 'No se pudo guardar el pedido');
+      }
+      return;
+    }
+
+    try {
+      const order = await createOrderMutation.mutateAsync(body);
       finishWithOrder(order);
     } catch (err: unknown) {
+      // La venta en efectivo ya se cobró: si el servidor no respondió (red, 5xx) se encola con el
+      // MISMO cuerpo. Si la BD sí la había registrado, el reenvío devuelve 200 por idempotencia;
+      // agregarle `createdOfflineAt` cambiaría el contenido y daría 409.
+      if (isCash && classifySendError(err).kind === 'transient') {
+        try {
+          await enqueueSale(body);
+        } catch (queueErr) {
+          setErrorMessage(
+            queueErr instanceof Error ? queueErr.message : 'No se pudo guardar el pedido',
+          );
+        }
+        return;
+      }
       if (err instanceof ApiError && err.status === 409) {
         const existing = await recoverExistingOrder();
         if (existing) {
@@ -169,6 +251,8 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
               type="button"
               role="radio"
               aria-checked={paymentMethod === 'qr'}
+              disabled={!online}
+              aria-describedby={!online ? 'qr-offline-hint' : undefined}
               onClick={() => {
                 setPaymentMethod('qr');
                 setErrorMessage(null);
@@ -177,12 +261,18 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
                 paymentMethod === 'qr'
                   ? 'border-primary bg-primary/10 text-primary shadow-xs ring-1 ring-primary'
                   : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
-              }`}
+              } disabled:cursor-not-allowed disabled:opacity-50`}
             >
               <QrCode className="size-4" />
               Pago QR
             </button>
           </div>
+          {!online && (
+            <p id="qr-offline-hint" className="text-xs text-muted-foreground">
+              {QR_NEEDS_CONNECTION}. Sin internet puedes cobrar en efectivo: el pedido se guarda y
+              se envía solo al volver la conexión.
+            </p>
+          )}
         </div>
 
         {/* Sección de Efectivo: botones de billetes y cálculo de cambio */}
@@ -293,7 +383,7 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
             type="button"
             variant="outline"
             onClick={onClose}
-            disabled={createOrderMutation.isPending}
+            disabled={isSubmitting}
             className="min-h-[48px] px-4 font-heading"
           >
             Cancelar
@@ -302,10 +392,10 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
           <Button
             type="submit"
             variant="default"
-            disabled={createOrderMutation.isPending || isCashInsufficient}
+            disabled={isSubmitting || isCashInsufficient || (!online && !isCash)}
             className="min-h-[48px] flex-1 font-heading text-sm font-bold uppercase tracking-wide"
           >
-            {createOrderMutation.isPending ? (
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
                 Registrando...

@@ -12,6 +12,8 @@ import { createSupabaseInventoryReader } from './features/inventory/reader';
 import { createSupabaseOrdersReader } from './features/pos/reader';
 import { createSupabasePromotionsReader } from './features/promotions/reader';
 import { createApiClient } from './lib/api-client';
+import { openOfflineDb } from './lib/offline/db';
+import { createOutbox } from './lib/offline/outbox';
 import { initWebSentry } from './lib/sentry';
 import { getWebEnv } from './lib/env';
 import { getSupabase } from './lib/supabase';
@@ -39,6 +41,7 @@ const services: AppServices = {
   inventory: createSupabaseInventoryReader(supabase),
   promotions: createSupabasePromotionsReader(supabase),
   orders: createSupabaseOrdersReader(supabase),
+  outbox: createOutbox(openOfflineDb()),
 };
 
 const router = createAppRouter();

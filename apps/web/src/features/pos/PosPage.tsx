@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { useCategories, useProducts } from '@/features/catalog/api';
 import { usePromotions } from '@/features/promotions/api';
 import { CartSidebar } from './CartSidebar';
-import { CheckoutDialog } from './CheckoutDialog';
+import { CheckoutDialog, type CheckoutResult } from './CheckoutDialog';
 import { PosNav } from './PosNav';
 import { ProductGrid } from './ProductGrid';
 import { useCart } from './use-cart';
@@ -23,11 +23,16 @@ export function PosPage() {
     return new Map(cart.items.map((i) => [i.productId, i.quantity]));
   }, [cart.items]);
 
-  const handleCheckoutSuccess = (orderNumber: number, changeCents: number) => {
+  const handleCheckoutSuccess = ({ label, changeCents, queued }: CheckoutResult) => {
     const changeMsg = changeCents > 0 ? ` · Cambio: ${formatMoney(changeCents)}` : '';
-    toast.success(`Pedido #${orderNumber} registrado con éxito${changeMsg}`, {
-      duration: 5000,
-    });
+    if (queued) {
+      toast.info(`Pedido ${label} guardado sin conexión${changeMsg}`, {
+        description: 'Pendiente de sincronizar: se enviará solo al volver la conexión.',
+        duration: 6000,
+      });
+    } else {
+      toast.success(`Pedido ${label} registrado con éxito${changeMsg}`, { duration: 5000 });
+    }
     cart.clearCart();
     setCheckoutOpen(false);
   };

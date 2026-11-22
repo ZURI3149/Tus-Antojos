@@ -10,7 +10,9 @@ import { OrdersReaderContext, type OrdersReader } from '@/features/pos/reader';
 import { PromotionsReaderContext, type PromotionsReader } from '@/features/promotions/reader';
 import type { ApiClient } from '@/lib/api-client';
 import { ApiContext } from '@/lib/api-context';
+import type { Outbox } from '@/lib/offline/outbox';
 import { createQueryClient } from '@/lib/query-client';
+import { OutboxProvider } from './OutboxProvider';
 
 /** Dependencias externas de la app (reales en main.tsx, falsas en pruebas). */
 export interface AppServices extends AuthServices {
@@ -25,6 +27,8 @@ export interface AppServices extends AuthServices {
   promotions: PromotionsReader;
   /** Lecturas de pedidos (Supabase + RLS). */
   orders: OrdersReader;
+  /** Cola de pedidos cobrados sin conexión (IndexedDB). */
+  outbox: Outbox;
 }
 
 export function AppProviders({
@@ -45,7 +49,9 @@ export function AppProviders({
             <InventoryReaderContext.Provider value={services.inventory}>
               <PromotionsReaderContext.Provider value={services.promotions}>
                 <OrdersReaderContext.Provider value={services.orders}>
-                  <AuthProvider services={services}>{children}</AuthProvider>
+                  <AuthProvider services={services}>
+                    <OutboxProvider outbox={services.outbox}>{children}</OutboxProvider>
+                  </AuthProvider>
                 </OrdersReaderContext.Provider>
               </PromotionsReaderContext.Provider>
             </InventoryReaderContext.Provider>

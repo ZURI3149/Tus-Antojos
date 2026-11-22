@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { IngredientUnit } from '../catalog/units';
 
 export const ORDER_STATUSES = [
   'pendiente',
@@ -88,9 +89,34 @@ export interface Order {
   discountCents: number;
   totalCents: number;
   cashierId: string | null;
+  cashierName?: string | null;
   createdOfflineAt: string | null;
   cancelReason: string | null;
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
+}
+
+export interface OrderEvent {
+  id: number;
+  orderId: string;
+  fromStatus: OrderStatus | null;
+  toStatus: OrderStatus;
+  reason: string;
+  userId: string | null;
+  userName?: string | null;
+  createdAt: string;
+}
+
+export interface OrderKardexMovement {
+  id: number;
+  ingredientId: string;
+  ingredientName: string;
+  unit: IngredientUnit;
+  type: string;
+  quantity: number;
+  costCents: number;
+  balanceQuantity: number;
+  balanceAvgUnitCost: string;
+  createdAt: string;
 }

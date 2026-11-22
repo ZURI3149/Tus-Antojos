@@ -1,10 +1,26 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database, Order, OrderItem, OrderStatus } from '@tus-antojos/shared';
+import type {
+  Database,
+  Order,
+  OrderEvent,
+  OrderItem,
+  OrderKardexMovement,
+  OrderStatus,
+} from '@tus-antojos/shared';
 import { createContext, useContext } from 'react';
 
+export interface OrdersFilter {
+  businessDate?: string;
+  status?: OrderStatus;
+  limit?: number;
+  offset?: number;
+}
+
 export interface OrdersReader {
-  orders(filters?: { businessDate?: string; status?: OrderStatus }): Promise<Order[]>;
+  orders(filters?: OrdersFilter): Promise<Order[]>;
   order(id: string): Promise<Order | null>;
+  events(orderId: string): Promise<OrderEvent[]>;
+  movements(orderId: string): Promise<OrderKardexMovement[]>;
 }
 
 function unwrap<T>(result: { data: T | null; error: unknown }, what: string): T {
@@ -43,6 +59,9 @@ export function toOrderItem(row: {
 export function toOrder(
   row: Database['public']['Tables']['orders']['Row'] & {
     order_items?: Database['public']['Tables']['order_items']['Row'][];
+    cashier?: { full_name: string } | null;
+    profiles?: { full_name: string } | null;
+    cashierName?: string | null;
   },
 ): Order {
   return {
@@ -56,6 +75,8 @@ export function toOrder(
     discountCents: row.discount_cents,
     totalCents: row.total_cents,
     cashierId: row.cashier_id,
+    cashierName:
+      row.cashier?.full_name ?? row.profiles?.full_name ?? row.cashierName ?? null,
     createdOfflineAt: row.created_offline_at,
     cancelReason: row.cancel_reason,
     createdAt: row.created_at,
@@ -69,8 +90,9 @@ export function createSupabaseOrdersReader(db: SupabaseClient<Database>): Orders
     async orders(filters) {
       let query = db
         .from('orders')
-        .select('*, order_items(*)')
-        .order('created_at', { ascending: false });
+        .select('*, order_items(*), cashier:profiles!orders_cashier_id_fkey(full_name)')
+        .order('business_date', { ascending: false })
+        .order('order_number', { ascending: false });
 
       if (filters?.businessDate) {
         query = query.eq('business_date', filters.businessDate);
@@ -78,16 +100,21 @@ export function createSupabaseOrdersReader(db: SupabaseClient<Database>): Orders
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
+      if (filters?.limit) {
+        const from = filters.offset ?? 0;
+        const to = from + filters.limit - 1;
+        query = query.range(from, to);
+      }
 
       const result = await query;
       const rows = unwrap(result, 'los pedidos');
-      return rows.map(toOrder);
+      return (rows as unknown as Array<Parameters<typeof toOrder>[0]>).map(toOrder);
     },
 
     async order(id: string) {
       const result = await db
         .from('orders')
-        .select('*, order_items(*)')
+        .select('*, order_items(*), cashier:profiles!orders_cashier_id_fkey(full_name)')
         .eq('id', id)
         .maybeSingle();
 
@@ -95,7 +122,49 @@ export function createSupabaseOrdersReader(db: SupabaseClient<Database>): Orders
         throw new Error('No se pudo cargar el pedido', { cause: result.error });
       }
       if (!result.data) return null;
-      return toOrder(result.data);
+      return toOrder(result.data as unknown as Parameters<typeof toOrder>[0]);
+    },
+
+    async events(orderId: string) {
+      const result = await db
+        .from('order_events')
+        .select('*, profiles!order_events_user_id_fkey(full_name)')
+        .eq('order_id', orderId)
+        .order('created_at', { ascending: true });
+
+      const rows = unwrap(result, 'el historial de eventos del pedido');
+      return (rows as any[]).map((r) => ({
+        id: Number(r.id),
+        orderId: r.order_id,
+        fromStatus: r.from_status,
+        toStatus: r.to_status,
+        reason: r.reason ?? '',
+        userId: r.user_id,
+        userName: r.profiles?.full_name ?? null,
+        createdAt: r.created_at,
+      }));
+    },
+
+    async movements(orderId: string) {
+      const result = await db
+        .from('inventory_movements')
+        .select('*, ingredients!inventory_movements_ingredient_id_fkey(name, unit)')
+        .eq('order_id', orderId)
+        .order('created_at', { ascending: true });
+
+      const rows = unwrap(result, 'los movimientos de inventario del pedido');
+      return (rows as any[]).map((r) => ({
+        id: Number(r.id),
+        ingredientId: r.ingredient_id,
+        ingredientName: r.ingredients?.name ?? 'Insumo',
+        unit: r.ingredients?.unit ?? 'u',
+        type: r.type,
+        quantity: r.quantity,
+        costCents: Number(r.cost_cents),
+        balanceQuantity: Number(r.balance_quantity),
+        balanceAvgUnitCost: String(r.balance_avg_unit_cost),
+        createdAt: r.created_at,
+      }));
     },
   };
 }

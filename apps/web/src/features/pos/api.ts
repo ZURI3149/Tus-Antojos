@@ -5,19 +5,21 @@ import {
   type CancelOrderInput,
   type CreateOrderInput,
   type Order,
+  type OrderEvent,
+  type OrderKardexMovement,
   type OrderRule,
-  type OrderStatus,
 } from '@tus-antojos/shared';
 import type { ApiClient, ApiError } from '@/lib/api-client';
 import { useApi } from '@/lib/api-context';
 import { notifyError } from '@/lib/notify-error';
-import { useOrdersReader } from './reader';
+import { useOrdersReader, type OrdersFilter } from './reader';
 
 export const orderKeys = {
   all: ['orders'] as const,
-  list: (filters?: { businessDate?: string; status?: OrderStatus }) =>
-    ['orders', 'list', filters] as const,
+  list: (filters?: OrdersFilter) => ['orders', 'list', filters] as const,
   detail: (id: string) => ['orders', 'detail', id] as const,
+  events: (id: string) => ['orders', 'events', id] as const,
+  movements: (id: string) => ['orders', 'movements', id] as const,
 };
 
 export function describeOrderError(error: ApiError): string {
@@ -34,7 +36,7 @@ export function describeOrderError(error: ApiError): string {
 
 export const notifyOrderError = (error: unknown) => notifyError(error, describeOrderError);
 
-export function useOrders(filters?: { businessDate?: string; status?: OrderStatus }) {
+export function useOrders(filters?: OrdersFilter) {
   const reader = useOrdersReader();
   return useQuery({
     queryKey: orderKeys.list(filters),
@@ -48,6 +50,24 @@ export function useOrder(id: string) {
     queryKey: orderKeys.detail(id),
     queryFn: () => reader.order(id),
     enabled: Boolean(id),
+  });
+}
+
+export function useOrderEvents(orderId: string) {
+  const reader = useOrdersReader();
+  return useQuery({
+    queryKey: orderKeys.events(orderId),
+    queryFn: () => reader.events(orderId),
+    enabled: Boolean(orderId),
+  });
+}
+
+export function useOrderMovements(orderId: string) {
+  const reader = useOrdersReader();
+  return useQuery({
+    queryKey: orderKeys.movements(orderId),
+    queryFn: () => reader.movements(orderId),
+    enabled: Boolean(orderId),
   });
 }
 

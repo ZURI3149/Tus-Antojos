@@ -148,7 +148,16 @@ export function KardexPage() {
                         {formatUnitCost(m.balanceAvgUnitCost, ingredient.unit)}
                       </td>
                       <td className="px-3 py-2 text-xs text-muted-foreground max-w-xs truncate">
-                        {m.reason || (m.purchaseId ? 'Compra registrada' : '-')}
+                        {m.orderId ? (
+                          <Link
+                            to={`/admin/pedidos/${m.orderId}`}
+                            className="text-primary hover:underline font-medium"
+                          >
+                            {m.type === 'anulacion' ? 'Anulación de pedido' : 'Pedido de venta'}
+                          </Link>
+                        ) : (
+                          m.reason || (m.purchaseId ? 'Compra registrada' : '-')
+                        )}
                       </td>
                     </tr>
                   );

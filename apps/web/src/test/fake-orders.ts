@@ -6,10 +6,12 @@ import {
   type CancelOrderInput,
   type CreateOrderInput,
   type Order,
+  type OrderEvent,
   type OrderItem,
+  type OrderKardexMovement,
 } from '@tus-antojos/shared';
 import { toBoliviaDate } from '@/features/pos/format';
-import type { OrdersReader } from '@/features/pos/reader';
+import type { OrdersFilter, OrdersReader } from '@/features/pos/reader';
 import { ApiError } from '@/lib/api-client';
 import { TEST_USERS } from './fake-auth';
 import { NOT_HANDLED, type FakeCatalog } from './fake-catalog';
@@ -17,6 +19,8 @@ import type { FakePromotions } from './fake-promotions';
 
 export interface FakeOrders {
   data: Order[];
+  events: OrderEvent[];
+  movements: (OrderKardexMovement & { orderId: string })[];
   reader: OrdersReader;
   handle(
     method: string,
@@ -63,6 +67,7 @@ export function seedOrders(catalog: FakeCatalog): Order[] {
       discountCents: 0,
       totalCents: 2000,
       cashierId: TEST_USERS.cajero.id,
+      cashierName: TEST_USERS.cajero.fullName,
       createdOfflineAt: null,
       cancelReason: null,
       createdAt: now,
@@ -80,6 +85,7 @@ export function seedOrders(catalog: FakeCatalog): Order[] {
       discountCents: 0,
       totalCents: 1000,
       cashierId: TEST_USERS.cajero.id,
+      cashierName: TEST_USERS.cajero.fullName,
       createdOfflineAt: null,
       cancelReason: null,
       createdAt: now,
@@ -96,9 +102,70 @@ export function createFakeOrders(
 ): FakeOrders {
   const orders: Order[] = structuredClone(initialData);
   let nextOrderNumber = orders.length + 1;
+  let nextEventId = 1;
+
+  const now = new Date().toISOString();
+  const events: OrderEvent[] = [
+    {
+      id: nextEventId++,
+      orderId: '00000000-0000-4000-8000-0000000000o1',
+      fromStatus: null,
+      toStatus: 'pendiente',
+      reason: '',
+      userId: TEST_USERS.cajero.id,
+      userName: TEST_USERS.cajero.fullName,
+      createdAt: now,
+    },
+    {
+      id: nextEventId++,
+      orderId: '00000000-0000-4000-8000-0000000000o1',
+      fromStatus: 'pendiente',
+      toStatus: 'en_preparacion',
+      reason: '',
+      userId: TEST_USERS.cocina.id,
+      userName: TEST_USERS.cocina.fullName,
+      createdAt: now,
+    },
+    {
+      id: nextEventId++,
+      orderId: '00000000-0000-4000-8000-0000000000o1',
+      fromStatus: 'en_preparacion',
+      toStatus: 'listo',
+      reason: '',
+      userId: TEST_USERS.cocina.id,
+      userName: TEST_USERS.cocina.fullName,
+      createdAt: now,
+    },
+    {
+      id: nextEventId++,
+      orderId: '00000000-0000-4000-8000-0000000000o2',
+      fromStatus: null,
+      toStatus: 'pendiente',
+      reason: '',
+      userId: TEST_USERS.cajero.id,
+      userName: TEST_USERS.cajero.fullName,
+      createdAt: now,
+    },
+  ];
+
+  const movements: (OrderKardexMovement & { orderId: string })[] = [
+    {
+      id: 101,
+      orderId: '00000000-0000-4000-8000-0000000000o1',
+      ingredientId: '00000000-0000-4000-8000-0000000000i1',
+      ingredientName: 'Harina especial',
+      unit: 'g',
+      type: 'venta',
+      quantity: -200,
+      costCents: 150,
+      balanceQuantity: 4800,
+      balanceAvgUnitCost: '0.0075',
+      createdAt: now,
+    },
+  ];
 
   const reader: OrdersReader = {
-    async orders(filters) {
+    async orders(filters?: OrdersFilter) {
       let filtered = [...orders];
       if (filters?.businessDate) {
         filtered = filtered.filter((o) => o.businessDate === filters.businessDate);
@@ -106,11 +173,25 @@ export function createFakeOrders(
       if (filters?.status) {
         filtered = filtered.filter((o) => o.status === filters.status);
       }
+      if (filters?.limit) {
+        const offset = filters.offset ?? 0;
+        filtered = filtered.slice(offset, offset + filters.limit);
+      }
       return structuredClone(filtered);
     },
     async order(id: string) {
       const found = orders.find((o) => o.id === id);
       return found ? structuredClone(found) : null;
+    },
+    async events(orderId: string) {
+      return structuredClone(events.filter((e) => e.orderId === orderId));
+    },
+    async movements(orderId: string) {
+      return structuredClone(
+        movements
+          .filter((m) => m.orderId === orderId)
+          .map(({ orderId: _, ...rest }) => rest),
+      );
     },
   };
 
@@ -185,14 +266,15 @@ export function createFakeOrders(
       const newOrder: Order = {
         id: crypto.randomUUID(),
         clientOrderId: input.clientOrderId,
-        businessDate: new Date().toISOString().slice(0, 10),
+        businessDate: toBoliviaDate(),
         orderNumber: nextOrderNumber++,
         status: 'pendiente',
         paymentMethod: input.paymentMethod,
         subtotalCents: priced.subtotalCents,
         discountCents: priced.discountCents,
         totalCents: priced.totalCents,
-        cashierId: null,
+        cashierId: TEST_USERS.cajero.id,
+        cashierName: TEST_USERS.cajero.fullName,
         createdOfflineAt: input.createdOfflineAt ?? null,
         cancelReason: null,
         createdAt: new Date().toISOString(),
@@ -201,6 +283,17 @@ export function createFakeOrders(
       };
 
       orders.push(newOrder);
+      events.push({
+        id: nextEventId++,
+        orderId: newOrder.id,
+        fromStatus: null,
+        toStatus: 'pendiente',
+        reason: '',
+        userId: TEST_USERS.cajero.id,
+        userName: TEST_USERS.cajero.fullName,
+        createdAt: newOrder.createdAt,
+      });
+
       return structuredClone(newOrder);
     }
 
@@ -223,8 +316,21 @@ export function createFakeOrders(
         );
       }
 
+      const prevStatus = order.status;
       order.status = input.to;
       order.updatedAt = new Date().toISOString();
+
+      events.push({
+        id: nextEventId++,
+        orderId: order.id,
+        fromStatus: prevStatus,
+        toStatus: input.to,
+        reason: '',
+        userId: TEST_USERS.admin.id,
+        userName: TEST_USERS.admin.fullName,
+        createdAt: order.updatedAt,
+      });
+
       return structuredClone(order);
     }
 
@@ -247,14 +353,42 @@ export function createFakeOrders(
         );
       }
 
+      const prevStatus = order.status;
       order.status = 'anulado';
       order.cancelReason = input.reason;
       order.updatedAt = new Date().toISOString();
+
+      events.push({
+        id: nextEventId++,
+        orderId: order.id,
+        fromStatus: prevStatus,
+        toStatus: 'anulado',
+        reason: input.reason,
+        userId: TEST_USERS.admin.id,
+        userName: TEST_USERS.admin.fullName,
+        createdAt: order.updatedAt,
+      });
+
+      // Añadir movimiento inverso al kardex
+      movements.push({
+        id: 1000 + nextEventId,
+        orderId: order.id,
+        ingredientId: '00000000-0000-4000-8000-0000000000i1',
+        ingredientName: 'Harina especial',
+        unit: 'g',
+        type: 'anulacion',
+        quantity: 200,
+        costCents: 150,
+        balanceQuantity: 5000,
+        balanceAvgUnitCost: '0.0075',
+        createdAt: order.updatedAt,
+      });
+
       return structuredClone(order);
     }
 
     return NOT_HANDLED;
   }
 
-  return { data: orders, reader, handle };
+  return { data: orders, events, movements, reader, handle };
 }

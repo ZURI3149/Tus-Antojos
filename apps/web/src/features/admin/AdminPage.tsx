@@ -4,6 +4,7 @@ import {
   ChartColumn,
   Croissant,
   Percent,
+  Receipt,
   Tags,
   Users,
   Wheat,
@@ -17,6 +18,7 @@ import { usePromotions } from '@/features/promotions/api';
 import { promotionStatus } from '@tus-antojos/shared';
 
 const ICONS: Record<string, LucideIcon> = {
+  '/admin/pedidos': Receipt,
   '/admin/productos': Croissant,
   '/admin/categorias': Tags,
   '/admin/insumos': Wheat,
@@ -26,6 +28,11 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const SECTIONS = [
+  {
+    path: '/admin/pedidos',
+    label: 'Pedidos',
+    description: 'Historial de ventas, comandas y kardex',
+  },
   ...CATALOG_SECTIONS,
   {
     path: '/admin/promociones',

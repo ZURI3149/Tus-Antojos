@@ -13,8 +13,6 @@ services:
     env_file:
       - path: apps/api/.env
         required: false
-      - path: .env.docker
-        required: false
       - path: .env
         required: false
     environment:
@@ -25,6 +23,10 @@ services:
       APP_VERSION: ${APP_VERSION:-docker}
       # Por defecto se conecta al Supabase local corriendo en el host
       SUPABASE_URL: ${SUPABASE_URL:-http://host.docker.internal:54321}
+      # El navegador inicia sesión contra localhost, así que los tokens llevan ese
+      # emisor (iss) aunque la API llegue a Supabase por host.docker.internal.
+      # Con Supabase Cloud hay que definirlo en .env (https://<ref>.supabase.co/auth/v1).
+      SUPABASE_JWT_ISSUER: ${SUPABASE_JWT_ISSUER:-http://127.0.0.1:54321/auth/v1}
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     healthcheck:

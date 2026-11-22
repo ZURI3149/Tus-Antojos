@@ -64,9 +64,14 @@ export class OrdersService {
       .from('orders')
       .select('status')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
-    if (findError || !order) {
+    if (findError) {
+      // Fallo real de la BD (no "no existe"): 500 + log, no un 404 engañoso.
+      this.logger.error({ msg: 'Fallo al leer el pedido', orderId: id, error: findError });
+      throw ordersError(findError);
+    }
+    if (!order) {
       throw new AppException('NOT_FOUND', 'Pedido no encontrado');
     }
 

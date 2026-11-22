@@ -9,13 +9,17 @@ import {
   formatMoney,
   formatMoneyInput,
   parseMoney,
+  type Order,
   type PaymentMethod,
 } from '@tus-antojos/shared';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ModalDialog } from '@/components/ui/modal-dialog';
+import { ApiError } from '@/lib/api-client';
 import { notifyOrderError, useCreateOrder } from './api';
+import { useOrdersReader } from './reader';
 import type { CartState } from './use-cart';
 
 export interface CheckoutDialogProps {
@@ -33,6 +37,7 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const createOrderMutation = useCreateOrder();
+  const ordersReader = useOrdersReader();
   const totalCents = cart.pricedCart.totalCents;
 
   const parsedCash = parseMoney(cashInput);
@@ -49,6 +54,39 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
   const handleSelectBill = (bs: number) => {
     setCashInput(formatMoneyInput(bs * 100));
     setErrorMessage(null);
+  };
+
+  /**
+   * El servidor recalcula precios y promociones: el cambio se da sobre lo que
+   * realmente se cobró (order.totalCents), no sobre el total del carrito.
+   */
+  const finishWithOrder = (order: Order, recovered = false) => {
+    const chargedCents = order.totalCents;
+    // En un pedido recuperado solo se calcula cambio si el método coincide con el actual.
+    const paidInCash = order.paymentMethod === 'efectivo' && (!recovered || isCash);
+    if (!recovered && chargedCents !== totalCents) {
+      toast.warning(
+        `El total cobrado es ${formatMoney(chargedCents)} (el carrito mostraba ${formatMoney(totalCents)}): cambiaron precios o promociones.`,
+      );
+    }
+    if (!recovered && paidInCash && cashReceivedCents < chargedCents) {
+      toast.warning(`Falta cobrar ${formatMoney(chargedCents - cashReceivedCents)} en efectivo.`);
+    }
+    onSuccess(order.orderNumber, paidInCash ? Math.max(0, cashReceivedCents - chargedCents) : 0);
+  };
+
+  /**
+   * 409 por clave reutilizada: un intento anterior con este mismo carrito ya se
+   * registró (p. ej. se perdió la respuesta). Se recupera y se muestra ese pedido
+   * en vez de dejar que se cobre dos veces.
+   */
+  const recoverExistingOrder = async (): Promise<Order | null> => {
+    if (!ordersReader.orderByClientId) return null;
+    try {
+      return await ordersReader.orderByClientId(cart.clientOrderId);
+    } catch {
+      return null;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,8 +109,18 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
         paymentMethod,
       });
 
-      onSuccess(order.orderNumber, isCash ? changeCents : 0);
+      finishWithOrder(order);
     } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 409) {
+        const existing = await recoverExistingOrder();
+        if (existing) {
+          toast.info(
+            `El pedido #${existing.orderNumber} ya estaba registrado (pago: ${existing.paymentMethod === 'qr' ? 'QR' : 'efectivo'}). No se volvió a cobrar. Si cambiaste el carrito después, registra lo agregado en un pedido nuevo.`,
+          );
+          finishWithOrder(existing, true);
+          return;
+        }
+      }
       notifyOrderError(err);
       if (err instanceof Error) {
         setErrorMessage(err.message);

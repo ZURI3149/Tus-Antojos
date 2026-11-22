@@ -10,6 +10,10 @@ export const ORDER_RULES = [
   'ORDER_NOT_CANCELLABLE',
   'ORDER_CANCEL_FORBIDDEN',
   'ORDER_TOO_LARGE',
+  'INVALID_ITEMS_COUNT',
+  'INVALID_QUANTITY',
+  'FUTURE_DATE_NOT_ALLOWED',
+  'INVALID_CANCEL_REASON',
 ] as const;
 
 export type OrderRule = (typeof ORDER_RULES)[number];
@@ -23,6 +27,10 @@ export const ORDER_RULE_MESSAGES: Record<OrderRule, string> = {
   ORDER_NOT_CANCELLABLE: 'El pedido no se puede anular en su estado actual',
   ORDER_CANCEL_FORBIDDEN: 'No tienes permiso para anular este pedido',
   ORDER_TOO_LARGE: 'La cantidad supera el límite permitido',
+  INVALID_ITEMS_COUNT: 'El pedido debe tener entre 1 y 50 productos distintos',
+  INVALID_QUANTITY: 'La cantidad de cada producto debe estar entre 1 y 999',
+  FUTURE_DATE_NOT_ALLOWED: 'La fecha del pedido offline no puede estar en el futuro',
+  INVALID_CANCEL_REASON: 'El motivo de anulación debe tener entre 3 y 200 caracteres',
 };
 
 export function orderRuleMessage(code: string): string | undefined {

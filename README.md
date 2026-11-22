@@ -125,7 +125,8 @@ El proyecto está completamente preparado para ejecutarse con Docker y Docker Co
    ```
 2. Construye y levanta los servicios:
    ```bash
-   pnpm docker:up      # equivale a: docker compose up -d --build
+   pnpm docker:build   # construye las imágenes (docker compose build)
+   pnpm docker:up      # levanta los contenedores (docker compose up -d)
    ```
 3. Acceso a los servicios:
    - **Web:** [http://localhost:8080](http://localhost:8080)
@@ -138,7 +139,21 @@ El proyecto está completamente preparado para ejecutarse con Docker y Docker Co
    pnpm docker:down    # detener y remover los contenedores
    ```
 
-Para personalizar variables o apuntar a Supabase Cloud, puedes basarte en [.env.docker.example](.env.docker.example).
+Para personalizar variables o apuntar a Supabase Cloud, copia [.env.example](.env.example) al `.env` de la raíz:
+
+```bash
+cp .env.example .env
+```
+
+Docker Compose lee ese `.env` para rellenar las variables de `docker-compose.yml`, incluidas las `VITE_*`, que se usan al **construir** la imagen web: si cambias alguna, vuelve a ejecutar `pnpm docker:build`. La API recibe además `apps/api/.env` y el `.env` de la raíz.
+
+| Archivo         | Uso                                                   |
+| :-------------- | :---------------------------------------------------- |
+| `.env` (raíz)   | Docker Compose (`pnpm docker:*`)                      |
+| `apps/api/.env` | API en desarrollo (`pnpm dev`) y contenedor de la API |
+| `apps/web/.env` | Web en desarrollo (`pnpm dev`)                        |
+
+Todos se generan o copian desde su `.env.example` y están en `.gitignore`.
 
 ## Despliegue
 

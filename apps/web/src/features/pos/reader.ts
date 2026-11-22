@@ -21,6 +21,13 @@ export interface OrdersReader {
   order(id: string): Promise<Order | null>;
   events(orderId: string): Promise<OrderEvent[]>;
   movements(orderId: string): Promise<OrderKardexMovement[]>;
+  /** Busca un pedido por su clave de idempotencia (client_order_id). */
+  orderByClientId?(clientOrderId: string): Promise<Order | null>;
+  /**
+   * Avisa cuando cambia cualquier pedido (Supabase Realtime). Devuelve la función
+   * para cancelar la suscripción. Opcional: los lectores falsos de las pruebas no lo tienen.
+   */
+  subscribe?(onChange: () => void): () => void;
 }
 
 function unwrap<T>(result: { data: T | null; error: unknown }, what: string): T {
@@ -123,6 +130,30 @@ export function createSupabaseOrdersReader(db: SupabaseClient<Database>): Orders
       }
       if (!result.data) return null;
       return toOrder(result.data as unknown as Parameters<typeof toOrder>[0]);
+    },
+
+    async orderByClientId(clientOrderId: string) {
+      const result = await db
+        .from('orders')
+        .select('*, order_items(*), cashier:profiles!orders_cashier_id_fkey(full_name)')
+        .eq('client_order_id', clientOrderId)
+        .maybeSingle();
+
+      if (result.error) {
+        throw new Error('No se pudo cargar el pedido', { cause: result.error });
+      }
+      if (!result.data) return null;
+      return toOrder(result.data as unknown as Parameters<typeof toOrder>[0]);
+    },
+
+    subscribe(onChange: () => void) {
+      const channel = db
+        .channel(`orders-changes-${crypto.randomUUID()}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => onChange())
+        .subscribe();
+      return () => {
+        void db.removeChannel(channel);
+      };
     },
 
     async events(orderId: string) {

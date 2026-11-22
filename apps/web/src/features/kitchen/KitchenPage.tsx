@@ -24,7 +24,7 @@ export function KitchenPage() {
     isRefetching,
     refetch,
     error,
-  } = useOrders({ businessDate: today });
+  } = useOrders({ businessDate: today }, { live: true });
 
   const [selectedTab, setSelectedTab] = useState<KitchenFilterTab>('todos');
   const [pendingActionOrderId, setPendingActionOrderId] = useState<string | null>(null);

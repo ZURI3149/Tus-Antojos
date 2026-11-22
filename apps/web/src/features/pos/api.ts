@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import {
   orderRuleMessage,
   type AdvanceOrderStatusInput,
@@ -36,11 +37,26 @@ export function describeOrderError(error: ApiError): string {
 
 export const notifyOrderError = (error: unknown) => notifyError(error, describeOrderError);
 
-export function useOrders(filters?: OrdersFilter) {
+/** Respaldo por si Realtime se cae o no está disponible. */
+const LIVE_ORDERS_FALLBACK_POLL_MS = 15_000;
+
+export function useOrders(filters?: OrdersFilter, options?: { live?: boolean }) {
   const reader = useOrdersReader();
+  const queryClient = useQueryClient();
+  const live = options?.live ?? false;
+
+  // Pantallas operativas (cocina, caja): refrescar en cuanto cambia un pedido.
+  useEffect(() => {
+    if (!live || !reader.subscribe) return;
+    return reader.subscribe(() => {
+      void queryClient.invalidateQueries({ queryKey: orderKeys.all });
+    });
+  }, [live, reader, queryClient]);
+
   return useQuery({
     queryKey: orderKeys.list(filters),
     queryFn: () => reader.orders(filters),
+    refetchInterval: live ? LIVE_ORDERS_FALLBACK_POLL_MS : false,
   });
 }
 

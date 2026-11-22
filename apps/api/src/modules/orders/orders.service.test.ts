@@ -65,11 +65,13 @@ function setup(currentOrderStatus: string = 'pendiente') {
     },
   );
 
-  const single = vi.fn(async () => ({
-    data: { status: currentOrderStatus },
-    error: null,
-  }));
-  const eq = vi.fn(() => ({ single }));
+  const maybeSingle = vi.fn(
+    async (): Promise<{ data: { status: string } | null; error: PostgrestError | null }> => ({
+      data: { status: currentOrderStatus },
+      error: null,
+    }),
+  );
+  const eq = vi.fn(() => ({ maybeSingle }));
   const select = vi.fn(() => ({ eq }));
   const from = vi.fn(() => ({ select }));
 
@@ -77,7 +79,7 @@ function setup(currentOrderStatus: string = 'pendiente') {
     admin: { rpc, from },
   } as unknown as SupabaseService;
 
-  return { service: new OrdersService(supabase), rpc, from, select, eq, single };
+  return { service: new OrdersService(supabase), rpc, from, select, eq, maybeSingle };
 }
 
 describe('OrdersService', () => {
@@ -140,6 +142,24 @@ describe('OrdersService', () => {
         code: 'FORBIDDEN',
         status: 403,
       });
+      expect(s.rpc).not.toHaveBeenCalled();
+    });
+
+    it('responde 404 NOT_FOUND si el pedido no existe', async () => {
+      s.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
+      await expect(
+        s.service.advanceStatus(ORDER_ID, 'en_preparacion', kitchenUser),
+      ).rejects.toMatchObject({ code: 'NOT_FOUND', status: 404 });
+    });
+
+    it('no disfraza un fallo de la BD como 404', async () => {
+      s.maybeSingle.mockResolvedValueOnce({
+        data: null,
+        error: { code: '08006', message: 'connection failure', details: '', hint: '' } as PostgrestError,
+      });
+      await expect(
+        s.service.advanceStatus(ORDER_ID, 'en_preparacion', kitchenUser),
+      ).rejects.toMatchObject({ code: 'INTERNAL', status: 500 });
       expect(s.rpc).not.toHaveBeenCalled();
     });
   });

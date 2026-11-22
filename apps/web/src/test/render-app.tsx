@@ -4,12 +4,19 @@ import { AppProviders } from '@/app/providers';
 import { routes } from '@/app/router';
 import { openOfflineDb } from '@/lib/offline/db';
 import { createOutbox, type Outbox } from '@/lib/offline/outbox';
+import { createSnapshotStore, type SnapshotStore } from '@/lib/offline/snapshots';
 import { createFakeApi, type FakeApi } from './fake-api';
 import type { FakeAuth } from './fake-auth';
 
-/** Cola offline vacía en una base IndexedDB propia (fake-indexeddb). */
-export function createTestOutbox(): Outbox {
-  return createOutbox(openOfflineDb({ name: `test-${crypto.randomUUID()}` }));
+export interface TestOffline {
+  outbox: Outbox;
+  snapshots: SnapshotStore;
+}
+
+/** Cola y copias offline vacías en una base IndexedDB propia (fake-indexeddb). */
+export function createTestOffline(): TestOffline {
+  const db = openOfflineDb({ name: `test-${crypto.randomUUID()}` });
+  return { outbox: createOutbox(db), snapshots: createSnapshotStore(db) };
 }
 
 /** Monta la app completa (providers + rutas) en `path`, con servicios falsos. */
@@ -17,8 +24,8 @@ export function renderApp(
   path: string,
   fake: FakeAuth,
   fakeApi: FakeApi = createFakeApi(),
-  // Cola real sobre fake-indexeddb, en una base propia por prueba.
-  outbox: Outbox = createTestOutbox(),
+  // Cola y copias reales sobre fake-indexeddb, en una base propia por prueba.
+  offline: TestOffline = createTestOffline(),
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
@@ -31,11 +38,12 @@ export function renderApp(
         inventory: fakeApi.inventory.reader,
         promotions: fakeApi.promotions.reader,
         orders: fakeApi.orders.reader,
-        outbox,
+        outbox: offline.outbox,
+        snapshots: offline.snapshots,
       }}
     >
       <RouterProvider router={router} />
     </AppProviders>,
   );
-  return { router, api: fakeApi, outbox };
+  return { router, api: fakeApi, outbox: offline.outbox, snapshots: offline.snapshots };
 }

@@ -11,8 +11,10 @@ import { PromotionsReaderContext, type PromotionsReader } from '@/features/promo
 import type { ApiClient } from '@/lib/api-client';
 import { ApiContext } from '@/lib/api-context';
 import type { Outbox } from '@/lib/offline/outbox';
+import type { SnapshotStore } from '@/lib/offline/snapshots';
 import { createQueryClient } from '@/lib/query-client';
 import { OutboxProvider } from './OutboxProvider';
+import { SnapshotsContext } from './snapshots-context';
 
 /** Dependencias externas de la app (reales en main.tsx, falsas en pruebas). */
 export interface AppServices extends AuthServices {
@@ -29,6 +31,8 @@ export interface AppServices extends AuthServices {
   orders: OrdersReader;
   /** Cola de pedidos cobrados sin conexión (IndexedDB). */
   outbox: Outbox;
+  /** Última lectura del catálogo para la caja sin red (IndexedDB). */
+  snapshots: SnapshotStore;
 }
 
 export function AppProviders({
@@ -49,9 +53,11 @@ export function AppProviders({
             <InventoryReaderContext.Provider value={services.inventory}>
               <PromotionsReaderContext.Provider value={services.promotions}>
                 <OrdersReaderContext.Provider value={services.orders}>
-                  <AuthProvider services={services}>
-                    <OutboxProvider outbox={services.outbox}>{children}</OutboxProvider>
-                  </AuthProvider>
+                  <SnapshotsContext.Provider value={services.snapshots}>
+                    <AuthProvider services={services}>
+                      <OutboxProvider outbox={services.outbox}>{children}</OutboxProvider>
+                    </AuthProvider>
+                  </SnapshotsContext.Provider>
                 </OrdersReaderContext.Provider>
               </PromotionsReaderContext.Provider>
             </InventoryReaderContext.Provider>

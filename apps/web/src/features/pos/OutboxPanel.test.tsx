@@ -8,7 +8,7 @@ import { reportOutboxDiscard } from '@/lib/sentry';
 import type * as SentryModule from '@/lib/sentry';
 import { createFakeApi } from '@/test/fake-api';
 import { createFakeAuth, TEST_USERS } from '@/test/fake-auth';
-import { createTestOutbox, renderApp } from '@/test/render-app';
+import { createTestOffline, renderApp } from '@/test/render-app';
 
 vi.mock('@/lib/sentry', async (importOriginal) => ({
   ...(await importOriginal<typeof SentryModule>()),
@@ -58,9 +58,10 @@ function sale(
 
 async function openWith(prepare: (outbox: Outbox, productId: string) => Promise<void>) {
   const api = createFakeApi();
-  const outbox = createTestOutbox();
+  const offline = createTestOffline();
+  const outbox = offline.outbox;
   await prepare(outbox, await conoId(api));
-  renderApp('/caja/pedidos', createFakeAuth({ session: 'cajero' }), api, outbox);
+  renderApp('/caja/pedidos', createFakeAuth({ session: 'cajero' }), api, offline);
   return { api, outbox, user: userEvent.setup() };
 }
 

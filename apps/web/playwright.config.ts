@@ -50,6 +50,8 @@ const webEnv = {
   VITE_SUPABASE_URL: supabase.url,
   VITE_SUPABASE_ANON_KEY: supabase.anonKey,
   VITE_API_URL: `http://localhost:${API_PORT}`,
+  // Impresora simulada para e2e/ticket.spec.ts (CE-01); nunca en producción.
+  VITE_PRINTER_SIMULATED: 'true',
 };
 
 export default defineConfig({

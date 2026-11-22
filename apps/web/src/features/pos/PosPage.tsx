@@ -8,6 +8,7 @@ import { CheckoutDialog, type CheckoutResult } from './CheckoutDialog';
 import { PosNav } from './PosNav';
 import { ProductGrid } from './ProductGrid';
 import { useCart } from './use-cart';
+import { usePrintTicket } from './use-print-ticket';
 import { formatSnapshotDate, usePosCatalog } from './use-pos-catalog';
 
 export function PosPage() {
@@ -15,6 +16,7 @@ export function PosPage() {
   const { categories, products, promotions } = catalog;
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const { printTicket, autoPrint } = usePrintTicket();
 
   const cart = useCart(products, promotions);
 
@@ -22,7 +24,9 @@ export function PosPage() {
     return new Map(cart.items.map((i) => [i.productId, i.quantity]));
   }, [cart.items]);
 
-  const handleCheckoutSuccess = ({ label, changeCents, queued }: CheckoutResult) => {
+  const handleCheckoutSuccess = ({ label, changeCents, queued, ticket }: CheckoutResult) => {
+    // La impresión nunca bloquea la venta: ya está registrada (o en la cola).
+    if (autoPrint) void printTicket(ticket);
     const changeMsg = changeCents > 0 ? ` · Cambio: ${formatMoney(changeCents)}` : '';
     if (queued) {
       toast.info(`Pedido ${label} guardado sin conexión${changeMsg}`, {

@@ -17,6 +17,7 @@ import { useOutbox } from '@/app/outbox-context';
 import { useAuth } from '@/features/auth/auth-context';
 import { useProfile } from '@/features/auth/use-profile';
 import { ApiError } from '@/lib/api-client';
+import { ticketFromOrder, ticketFromOutboxEntry, type TicketData } from '@/lib/escpos/ticket';
 import { classifySendError } from '@/lib/offline/sync';
 import { provisionalOrderLabel } from '@/lib/offline/labels';
 import { useNetworkStatus } from '@/lib/offline/use-network-status';
@@ -37,6 +38,8 @@ export interface CheckoutResult {
   changeCents: number;
   /** El pedido quedó en la cola y se enviará al volver la conexión. */
   queued: boolean;
+  /** Ticket listo para imprimir (OP11). */
+  ticket: TicketData;
 }
 
 export const QR_NEEDS_CONNECTION = 'El pago QR necesita conexión';
@@ -90,10 +93,16 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
     if (!recovered && paidInCash && cashReceivedCents < chargedCents) {
       toast.warning(`Falta cobrar ${formatMoney(chargedCents - cashReceivedCents)} en efectivo.`);
     }
+    const change = paidInCash ? Math.max(0, cashReceivedCents - chargedCents) : 0;
+    const ticket = ticketFromOrder(order, {
+      cashReceivedCents: paidInCash ? cashReceivedCents : null,
+      changeCents: paidInCash ? change : null,
+    });
     onSuccess({
       label: `#${order.orderNumber}`,
-      changeCents: paidInCash ? Math.max(0, cashReceivedCents - chargedCents) : 0,
+      changeCents: change,
       queued: false,
+      ticket: { ...ticket, cashierName: ticket.cashierName ?? profile?.fullName ?? null },
     });
   };
 
@@ -119,7 +128,12 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
           changeCents,
         },
       });
-      onSuccess({ label: provisionalOrderLabel(entry.clientOrderId), changeCents, queued: true });
+      onSuccess({
+        label: provisionalOrderLabel(entry.clientOrderId),
+        changeCents,
+        queued: true,
+        ticket: ticketFromOutboxEntry(entry),
+      });
     } finally {
       setIsQueuing(false);
     }

@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { expect, test, type Page } from '@playwright/test';
-import { loginAs, SEED_PASSWORD, SEED_USERS } from './support';
+import { cancelOrdersByClientId, serviceClient } from './orders-cleanup';
+import { loginAs } from './support';
 
 /**
  * OP-01 / CE-06: sin red la caja registra 20 ventas en efectivo; tras recargar siguen en la cola;
@@ -8,18 +8,6 @@ import { loginAs, SEED_PASSWORD, SEED_USERS } from './support';
  * producción (proyecto `offline` de playwright.config.ts) porque necesita el service worker.
  */
 const SALES = 20;
-
-function env(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`Falta ${name} (lo define playwright.config.ts)`);
-  return value;
-}
-
-function serviceClient() {
-  return createClient(env('E2E_SUPABASE_URL'), env('E2E_SUPABASE_SERVICE_ROLE_KEY'), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 /** Claves de la cola leídas directamente de IndexedDB en la página. */
 function outboxIds(page: Page): Promise<string[]> {
@@ -65,36 +53,11 @@ async function sellOneCono(page: Page): Promise<void> {
   await expect(cart.getByText('El carrito está vacío')).toBeVisible();
 }
 
-/** Deja el stock como estaba: el admin anula por la API los pedidos que creó la prueba. */
-async function cancelOrders(clientOrderIds: string[]): Promise<void> {
-  if (clientOrderIds.length === 0) return;
-  const { data: orders } = await serviceClient()
-    .from('orders')
-    .select('id, status')
-    .in('client_order_id', clientOrderIds);
-  const browser = createClient(env('E2E_SUPABASE_URL'), env('E2E_SUPABASE_ANON_KEY'), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data } = await browser.auth.signInWithPassword({
-    email: SEED_USERS.admin.email,
-    password: SEED_PASSWORD,
-  });
-  const token = data.session?.access_token;
-  for (const order of orders ?? []) {
-    if (order.status !== 'pendiente' && order.status !== 'en_preparacion') continue;
-    await fetch(`${env('E2E_API_URL')}/orders/${order.id}/cancel`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ reason: 'Limpieza de la prueba E2E offline' }),
-    });
-  }
-}
-
 test.describe('caja sin conexión', () => {
   let created: string[] = [];
 
   test.afterEach(async () => {
-    await cancelOrders(created);
+    await cancelOrdersByClientId(created);
     created = [];
   });
 

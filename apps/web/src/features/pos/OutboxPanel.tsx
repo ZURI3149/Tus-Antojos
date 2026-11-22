@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CloudUpload, Loader2, RotateCw, Trash2 } from 'lucide-react';
+import { AlertTriangle, CloudUpload, Loader2, Printer, RotateCw, Trash2 } from 'lucide-react';
 import { formatMoney } from '@tus-antojos/shared';
 import { useOutbox } from '@/app/outbox-context';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,9 @@ import { useAuth } from '@/features/auth/auth-context';
 import type { OutboxEntry } from '@/lib/offline/types';
 import { provisionalOrderLabel } from '@/lib/offline/labels';
 import { useNetworkStatus } from '@/lib/offline/use-network-status';
+import { ticketFromOutboxEntry } from '@/lib/escpos/ticket';
 import { DiscardOutboxDialog } from './DiscardOutboxDialog';
+import { usePrintTicket } from './use-print-ticket';
 import { formatOrderTime } from './format';
 
 function attemptsText(n: number): string {
@@ -51,6 +53,7 @@ export function OutboxPanel() {
   const userId = session?.user.id;
   const [discarding, setDiscarding] = useState<OutboxEntry | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const { printTicket } = usePrintTicket();
 
   const own = useMemo(() => entries.filter((e) => e.cashierId === userId), [entries, userId]);
   const othersByCashier = useMemo(() => {
@@ -133,6 +136,17 @@ export function OutboxPanel() {
                   </div>
                   <EntryStatus entry={entry} />
                 </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-label={`Reimprimir ${label}`}
+                  onClick={() => void printTicket(ticketFromOutboxEntry(entry, { reprint: true }))}
+                  className="min-h-[44px] font-heading text-xs uppercase"
+                >
+                  <Printer aria-hidden className="mr-1.5 size-3.5" />
+                  Reimprimir
+                </Button>
                 {entry.status === 'por_revisar' && (
                   <div className="flex gap-2">
                     <Button

@@ -7,6 +7,7 @@ import { createOutbox, type Outbox } from '@/lib/offline/outbox';
 import { createSnapshotStore, type SnapshotStore } from '@/lib/offline/snapshots';
 import { createBrowserTransport } from '@/lib/escpos/transports/browser';
 import { createSimulatedTransport } from '@/lib/escpos/transports/simulated';
+import type { PrinterTransport } from '@/lib/escpos/transports/types';
 import { createFakeApi, type FakeApi } from './fake-api';
 import type { FakeAuth } from './fake-auth';
 
@@ -28,6 +29,11 @@ export function renderApp(
   fakeApi: FakeApi = createFakeApi(),
   // Cola y copias reales sobre fake-indexeddb, en una base propia por prueba.
   offline: TestOffline = createTestOffline(),
+  // El navegador de las pruebas no abre el diálogo de impresión; la simulada guarda lo impreso.
+  printers: PrinterTransport[] = [
+    createBrowserTransport({ print: () => {} }),
+    createSimulatedTransport(),
+  ],
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
@@ -42,8 +48,7 @@ export function renderApp(
         orders: fakeApi.orders.reader,
         outbox: offline.outbox,
         snapshots: offline.snapshots,
-        // El navegador de las pruebas no abre el diálogo de impresión; la simulada guarda lo impreso.
-        printers: [createBrowserTransport({ print: () => {} }), createSimulatedTransport()],
+        printers,
       }}
     >
       <RouterProvider router={router} />

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { ModalDialog } from '@/components/ui/modal-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import type { OutboxEntry } from '@/lib/offline/types';
-import { provisionalOrderLabel } from '@/lib/offline/use-network-status';
+import { provisionalOrderLabel } from '@/lib/offline/labels';
 import { reportOutboxDiscard } from '@/lib/sentry';
 
 export interface DiscardOutboxDialogProps {

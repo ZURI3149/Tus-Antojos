@@ -7,7 +7,7 @@ import { useApi } from '@/lib/api-context';
 import type { Outbox } from '@/lib/offline/outbox';
 import { createSyncEngine } from '@/lib/offline/sync';
 import type { OutboxEntry } from '@/lib/offline/types';
-import { provisionalOrderLabel } from '@/lib/offline/use-network-status';
+import { provisionalOrderLabel } from '@/lib/offline/labels';
 import { createWebLock } from '@/lib/offline/web-lock';
 import { OutboxContext, type OutboxState } from './outbox-context';
 

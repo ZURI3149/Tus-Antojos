@@ -5,7 +5,8 @@ import { useOutbox } from '@/app/outbox-context';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/auth-context';
 import type { OutboxEntry } from '@/lib/offline/types';
-import { provisionalOrderLabel, useNetworkStatus } from '@/lib/offline/use-network-status';
+import { provisionalOrderLabel } from '@/lib/offline/labels';
+import { useNetworkStatus } from '@/lib/offline/use-network-status';
 import { DiscardOutboxDialog } from './DiscardOutboxDialog';
 import { formatOrderTime } from './format';
 

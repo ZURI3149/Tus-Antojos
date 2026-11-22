@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Outbox } from '@/lib/offline/outbox';
 import type { NewOutboxEntry } from '@/lib/offline/types';
-import { provisionalOrderLabel } from '@/lib/offline/use-network-status';
+import { provisionalOrderLabel } from '@/lib/offline/labels';
 import { reportOutboxDiscard } from '@/lib/sentry';
 import type * as SentryModule from '@/lib/sentry';
 import { createFakeApi } from '@/test/fake-api';

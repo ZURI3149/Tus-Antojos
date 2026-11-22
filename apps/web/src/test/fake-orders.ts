@@ -22,12 +22,7 @@ export interface FakeOrders {
   events: OrderEvent[];
   movements: (OrderKardexMovement & { orderId: string })[];
   reader: OrdersReader;
-  handle(
-    method: string,
-    path: string,
-    body?: unknown,
-    headers?: Record<string, string>,
-  ): unknown;
+  handle(method: string, path: string, body?: unknown, headers?: Record<string, string>): unknown;
 }
 
 export function seedOrders(catalog: FakeCatalog): Order[] {
@@ -188,9 +183,7 @@ export function createFakeOrders(
     },
     async movements(orderId: string) {
       return structuredClone(
-        movements
-          .filter((m) => m.orderId === orderId)
-          .map(({ orderId: _, ...rest }) => rest),
+        movements.filter((m) => m.orderId === orderId).map(({ orderId: _, ...rest }) => rest),
       );
     },
   };
@@ -205,10 +198,7 @@ export function createFakeOrders(
       const input = body as CreateOrderInput;
       const idempotencyKey = headers?.['idempotency-key'];
 
-      if (
-        idempotencyKey &&
-        idempotencyKey.toLowerCase() !== input.clientOrderId.toLowerCase()
-      ) {
+      if (idempotencyKey && idempotencyKey.toLowerCase() !== input.clientOrderId.toLowerCase()) {
         throw new ApiError(
           400,
           'VALIDATION_ERROR',

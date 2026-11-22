@@ -49,6 +49,12 @@ describe('promotions contra Supabase local', () => {
       [like],
     );
     await sql(`delete from public.categories where name like $1`, [like]);
+    // El insumo de la receta también es de la prueba (su stock lo crea un trigger).
+    await sql(
+      `delete from public.inventory_stock where ingredient_id in (select id from public.ingredients where name like $1)`,
+      [like],
+    );
+    await sql(`delete from public.ingredients where name like $1`, [like]);
   }
 
   beforeAll(async () => {

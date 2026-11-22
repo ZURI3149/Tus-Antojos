@@ -1,10 +1,5 @@
 import { useState } from 'react';
-import {
-  Banknote,
-  CheckCircle2,
-  Loader2,
-  QrCode,
-} from 'lucide-react';
+import { Banknote, CheckCircle2, Loader2, QrCode } from 'lucide-react';
 import {
   formatMoney,
   formatMoneyInput,
@@ -277,9 +272,7 @@ export function CheckoutDialog({ open, onClose, cart, onSuccess }: CheckoutDialo
               <QrCode className="size-24" />
             </div>
             <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-foreground">
-                Cobro mediante código QR
-              </p>
+              <p className="text-sm font-medium text-foreground">Cobro mediante código QR</p>
               <p className="text-xs text-muted-foreground">
                 Muestra el código al cliente y verifica el comprobante antes de confirmar.
               </p>

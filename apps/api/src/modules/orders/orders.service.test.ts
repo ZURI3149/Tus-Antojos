@@ -155,7 +155,12 @@ describe('OrdersService', () => {
     it('no disfraza un fallo de la BD como 404', async () => {
       s.maybeSingle.mockResolvedValueOnce({
         data: null,
-        error: { code: '08006', message: 'connection failure', details: '', hint: '' } as PostgrestError,
+        error: {
+          code: '08006',
+          message: 'connection failure',
+          details: '',
+          hint: '',
+        } as PostgrestError,
       });
       await expect(
         s.service.advanceStatus(ORDER_ID, 'en_preparacion', kitchenUser),

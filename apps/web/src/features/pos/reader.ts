@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   Database,
+  IngredientUnit,
   Order,
   OrderEvent,
   OrderItem,
@@ -8,6 +9,14 @@ import type {
   OrderStatus,
 } from '@tus-antojos/shared';
 import { createContext, useContext } from 'react';
+
+type Tables = Database['public']['Tables'];
+type OrderEventRow = Tables['order_events']['Row'] & {
+  profiles: { full_name: string } | null;
+};
+type OrderMovementRow = Tables['inventory_movements']['Row'] & {
+  ingredients: { name: string; unit: IngredientUnit } | null;
+};
 
 export interface OrdersFilter {
   businessDate?: string;
@@ -82,8 +91,7 @@ export function toOrder(
     discountCents: row.discount_cents,
     totalCents: row.total_cents,
     cashierId: row.cashier_id,
-    cashierName:
-      row.cashier?.full_name ?? row.profiles?.full_name ?? row.cashierName ?? null,
+    cashierName: row.cashier?.full_name ?? row.profiles?.full_name ?? row.cashierName ?? null,
     createdOfflineAt: row.created_offline_at,
     cancelReason: row.cancel_reason,
     createdAt: row.created_at,
@@ -164,7 +172,7 @@ export function createSupabaseOrdersReader(db: SupabaseClient<Database>): Orders
         .order('created_at', { ascending: true });
 
       const rows = unwrap(result, 'el historial de eventos del pedido');
-      return (rows as any[]).map((r) => ({
+      return (rows as unknown as OrderEventRow[]).map((r): OrderEvent => ({
         id: Number(r.id),
         orderId: r.order_id,
         fromStatus: r.from_status,
@@ -184,11 +192,11 @@ export function createSupabaseOrdersReader(db: SupabaseClient<Database>): Orders
         .order('created_at', { ascending: true });
 
       const rows = unwrap(result, 'los movimientos de inventario del pedido');
-      return (rows as any[]).map((r) => ({
+      return (rows as unknown as OrderMovementRow[]).map((r): OrderKardexMovement => ({
         id: Number(r.id),
         ingredientId: r.ingredient_id,
         ingredientName: r.ingredients?.name ?? 'Insumo',
-        unit: r.ingredients?.unit ?? 'u',
+        unit: r.ingredients?.unit ?? 'unidad',
         type: r.type,
         quantity: r.quantity,
         costCents: Number(r.cost_cents),

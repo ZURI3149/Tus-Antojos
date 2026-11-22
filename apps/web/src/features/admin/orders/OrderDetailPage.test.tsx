@@ -7,11 +7,7 @@ import { renderApp } from '@/test/render-app';
 
 function open(orderId: string) {
   const api = createFakeApi();
-  const result = renderApp(
-    `/admin/pedidos/${orderId}`,
-    createFakeAuth({ session: 'admin' }),
-    api,
-  );
+  const result = renderApp(`/admin/pedidos/${orderId}`, createFakeAuth({ session: 'admin' }), api);
   return { ...result, user: userEvent.setup(), api };
 }
 

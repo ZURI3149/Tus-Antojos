@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Clock,
   QrCode,
-  RotateCcw,
   Search,
   ShoppingBag,
   Tag,
@@ -33,7 +32,11 @@ type FilterTab = 'todos' | OrderStatus;
 
 export function CashierOrdersPage() {
   const today = toBoliviaDate();
-  const { data: orders = [], isLoading, error } = useOrders({ businessDate: today }, { live: true });
+  const {
+    data: orders = [],
+    isLoading,
+    error,
+  } = useOrders({ businessDate: today }, { live: true });
   const { data: profile } = useProfile();
 
   const [selectedTab, setSelectedTab] = useState<FilterTab>('todos');

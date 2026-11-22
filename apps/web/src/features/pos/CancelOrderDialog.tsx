@@ -14,12 +14,7 @@ export interface CancelOrderDialogProps {
   onClose: () => void;
 }
 
-export function CancelOrderDialog({
-  open,
-  orderNumber,
-  orderId,
-  onClose,
-}: CancelOrderDialogProps) {
+export function CancelOrderDialog({ open, orderNumber, orderId, onClose }: CancelOrderDialogProps) {
   const [reason, setReason] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 

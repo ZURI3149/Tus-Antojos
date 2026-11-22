@@ -1,11 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search, ShoppingBag, Tag, X } from 'lucide-react';
-import {
-  bestPromotion,
-  formatMoney,
-  type Category,
-  type Product,
-} from '@tus-antojos/shared';
+import { bestPromotion, formatMoney, type Category, type Product } from '@tus-antojos/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useProductImageStorage } from '@/features/catalog/images';
@@ -33,15 +28,9 @@ export function ProductGrid({
   const [searchQuery, setSearchQuery] = useState('');
   const imageStorage = useProductImageStorage();
 
-  const activeCategories = useMemo(
-    () => categories.filter((c) => c.isActive),
-    [categories],
-  );
+  const activeCategories = useMemo(() => categories.filter((c) => c.isActive), [categories]);
 
-  const activePromos = useMemo(
-    () => promotions.filter((p) => p.isActive),
-    [promotions],
-  );
+  const activePromos = useMemo(() => promotions.filter((p) => p.isActive), [promotions]);
 
   const filteredProducts = useMemo(() => {
     return products
@@ -123,10 +112,7 @@ export function ProductGrid({
       {isLoading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-32 animate-pulse rounded-xl border bg-muted/40 p-4"
-            />
+            <div key={i} className="h-32 animate-pulse rounded-xl border bg-muted/40 p-4" />
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
@@ -192,8 +178,7 @@ export function ProductGrid({
                           {formatMoney(prod.priceCents)}
                         </span>
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.2 text-[0.65rem] font-bold text-emerald-600 dark:text-emerald-400">
-                          <Tag className="size-2.5" />
-                          -{formatMoney(promo.unitDiscountCents)}
+                          <Tag className="size-2.5" />-{formatMoney(promo.unitDiscountCents)}
                         </span>
                       </div>
                       <span className="font-heading text-base font-bold text-emerald-600 dark:text-emerald-400">

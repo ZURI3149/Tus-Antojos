@@ -43,10 +43,7 @@ export function priceCart(
   promotions: PromotionPricingCandidate[],
   at: Date = new Date(),
 ): PricedCart {
-  const prodMap =
-    products instanceof Map
-      ? products
-      : new Map(products.map((p) => [p.id, p]));
+  const prodMap = products instanceof Map ? products : new Map(products.map((p) => [p.id, p]));
 
   let subtotalCents = 0;
   let discountCents = 0;

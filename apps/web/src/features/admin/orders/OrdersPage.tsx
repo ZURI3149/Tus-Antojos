@@ -222,7 +222,12 @@ export function OrdersPage() {
                           )}
                         </td>
                         <td className="px-3.5 py-3 text-right">
-                          <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs"
+                          >
                             <Link to={`/admin/pedidos/${order.id}`}>
                               <Eye className="size-3.5" />
                               Ver detalle

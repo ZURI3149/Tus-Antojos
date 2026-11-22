@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Headers,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Headers, HttpCode, HttpStatus, Param, Post, Res } from '@nestjs/common';
 import {
   advanceOrderStatusSchema,
   cancelOrderSchema,
@@ -52,7 +43,7 @@ export class OrdersController {
       res.status(HttpStatus.CREATED);
     }
 
-    const { replayed, ...order } = result;
+    const { replayed: _replayed, ...order } = result;
     return order as Order;
   }
 

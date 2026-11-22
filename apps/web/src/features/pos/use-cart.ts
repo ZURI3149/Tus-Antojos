@@ -52,10 +52,7 @@ export function useCart(products: Product[] = [], promotions: PromotionRowData[]
     setClientOrderId(crypto.randomUUID());
   };
 
-  const activePromos = useMemo(
-    () => promotions.filter((p) => p.isActive),
-    [promotions],
-  );
+  const activePromos = useMemo(() => promotions.filter((p) => p.isActive), [promotions]);
 
   const pricedCart: PricedCart = useMemo(() => {
     const lines: CartLine[] = items.map((i) => ({
@@ -66,10 +63,7 @@ export function useCart(products: Product[] = [], promotions: PromotionRowData[]
     return priceCart(lines, products, activePromos);
   }, [items, products, activePromos]);
 
-  const totalItems = useMemo(
-    () => items.reduce((acc, item) => acc + item.quantity, 0),
-    [items],
-  );
+  const totalItems = useMemo(() => items.reduce((acc, item) => acc + item.quantity, 0), [items]);
 
   return {
     clientOrderId,

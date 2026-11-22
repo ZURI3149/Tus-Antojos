@@ -4,19 +4,8 @@ import {
   formatQuantity,
   formatUnitCost,
   type IngredientUnit,
-  type InventoryMovementType,
 } from '@tus-antojos/shared';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
-  Ban,
-  Clock,
-  Layers,
-  Receipt,
-  User,
-  WifiOff,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Ban, Clock, Layers, WifiOff } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { PageHeader } from '@/components/page-header';

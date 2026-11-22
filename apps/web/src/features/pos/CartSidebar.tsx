@@ -1,13 +1,5 @@
 import { useState } from 'react';
-import {
-  CreditCard,
-  MessageSquare,
-  Minus,
-  Plus,
-  ShoppingBag,
-  Tag,
-  Trash2,
-} from 'lucide-react';
+import { CreditCard, MessageSquare, Minus, Plus, ShoppingBag, Tag, Trash2 } from 'lucide-react';
 import { formatMoney, type PricedCartLine } from '@tus-antojos/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,9 +25,7 @@ export function CartSidebar({ cart, onCheckout }: CartSidebarProps) {
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-2">
           <ShoppingBag className="size-5 text-primary" />
-          <h2 className="font-heading text-base font-bold tracking-wide">
-            Pedido actual
-          </h2>
+          <h2 className="font-heading text-base font-bold tracking-wide">Pedido actual</h2>
         </div>
         {hasItems && (
           <span className="rounded-full bg-primary/10 px-2 py-0.5 font-heading text-xs font-semibold text-primary">

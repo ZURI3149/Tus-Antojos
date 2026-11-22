@@ -6,8 +6,6 @@ import {
   type CancelOrderInput,
   type CreateOrderInput,
   type Order,
-  type OrderEvent,
-  type OrderKardexMovement,
   type OrderRule,
 } from '@tus-antojos/shared';
 import type { ApiClient, ApiError } from '@/lib/api-client';

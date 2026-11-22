@@ -77,7 +77,9 @@ describe('PosPage', () => {
 
   it('permite modificar la cantidad, agregar nota y vaciar el carrito', async () => {
     const { user } = open();
-    const productCard = await screen.findByRole('button', { name: /Agregar Cono simple al pedido/i });
+    const productCard = await screen.findByRole('button', {
+      name: /Agregar Cono simple al pedido/i,
+    });
     await user.click(productCard);
 
     const cart = screen.getByLabelText('Carrito de pedido actual');
@@ -103,7 +105,9 @@ describe('PosPage', () => {
 
   it('abre el diálogo de cobro y calcula el cambio correctamente para pago en efectivo', async () => {
     const { user, api } = open();
-    const productCard = await screen.findByRole('button', { name: /Agregar Cono simple al pedido/i });
+    const productCard = await screen.findByRole('button', {
+      name: /Agregar Cono simple al pedido/i,
+    });
     await user.click(productCard);
 
     const cart = screen.getByLabelText('Carrito de pedido actual');
@@ -156,7 +160,9 @@ describe('PosPage', () => {
 
   it('permite cobrar mediante pago QR', async () => {
     const { user, api } = open();
-    const productCard = await screen.findByRole('button', { name: /Agregar Cono simple al pedido/i });
+    const productCard = await screen.findByRole('button', {
+      name: /Agregar Cono simple al pedido/i,
+    });
     await user.click(productCard);
 
     const cart = screen.getByLabelText('Carrito de pedido actual');
@@ -186,14 +192,18 @@ describe('PosPage', () => {
 
   it('preserva el clientOrderId para reintento en caso de fallo del servidor', async () => {
     const { user, api } = open();
-    const productCard = await screen.findByRole('button', { name: /Agregar Cono simple al pedido/i });
+    const productCard = await screen.findByRole('button', {
+      name: /Agregar Cono simple al pedido/i,
+    });
     await user.click(productCard);
 
     const cart = screen.getByLabelText('Carrito de pedido actual');
     await user.click(within(cart).getByRole('button', { name: /Cobrar/i }));
 
     // Configurar fallo simulado
-    api.failNext(new ApiError(500, 'INTERNAL', 'Error temporal del servidor', undefined, 'req-err'));
+    api.failNext(
+      new ApiError(500, 'INTERNAL', 'Error temporal del servidor', undefined, 'req-err'),
+    );
 
     // Botón de monto exacto
     await user.click(screen.getByRole('button', { name: /Exacto/i }));

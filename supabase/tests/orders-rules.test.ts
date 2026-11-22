@@ -169,10 +169,9 @@ describe('public.create_order', () => {
       message: 'PRODUCT_INACTIVE',
     });
 
-    const [orderExists] = await sql(
-      `select 1 from public.orders where client_order_id = $1`,
-      [clientOrderId],
-    );
+    const [orderExists] = await sql(`select 1 from public.orders where client_order_id = $1`, [
+      clientOrderId,
+    ]);
     expect(orderExists).toBeUndefined();
   });
 });
@@ -292,7 +291,10 @@ describe('public.cancel_order', () => {
     });
     const orderId = (data as { id: string }).id;
 
-    await service.rpc('advance_order_status', { p_order_id: orderId, p_to_status: 'en_preparacion' });
+    await service.rpc('advance_order_status', {
+      p_order_id: orderId,
+      p_to_status: 'en_preparacion',
+    });
     await service.rpc('advance_order_status', { p_order_id: orderId, p_to_status: 'listo' });
 
     const cancelRes = await service.rpc('cancel_order', {

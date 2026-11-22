@@ -1,10 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type {
-  CreateOrder,
-  Json,
-  Order,
-  OrderStatus,
-} from '@tus-antojos/shared';
+import type { CreateOrder, Json, Order, OrderStatus } from '@tus-antojos/shared';
 import { canTransition } from '@tus-antojos/shared';
 import type { AuthUser } from '../../auth/auth-user.js';
 import { AppException } from '../../common/app-exception.js';

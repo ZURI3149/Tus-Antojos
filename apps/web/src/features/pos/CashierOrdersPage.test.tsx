@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { createFakeApi } from '@/test/fake-api';
@@ -86,7 +86,9 @@ describe('CashierOrdersPage', () => {
 
     // El estado cambia a entregado y el botón ya no está
     expect(await screen.findByText('Entregado')).toBeVisible();
-    expect(screen.queryByRole('button', { name: /Marcar como entregado/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Marcar como entregado/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('permite anular un pedido pendiente indicando el motivo', async () => {

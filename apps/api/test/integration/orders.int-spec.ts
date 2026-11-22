@@ -117,9 +117,10 @@ describe('orders API contra Supabase local', () => {
       [`${PREFIX}Ing`],
     );
     const ingredientId = ingRows[0]!.id as string;
-    await sql(`update public.inventory_stock set quantity = 500, avg_unit_cost = 10 where ingredient_id = $1`, [
-      ingredientId,
-    ]);
+    await sql(
+      `update public.inventory_stock set quantity = 500, avg_unit_cost = 10 where ingredient_id = $1`,
+      [ingredientId],
+    );
 
     // Producto activo con receta
     const { rows: prodRows } = await sql(

@@ -1,13 +1,6 @@
 import { useMemo, useState } from 'react';
-import {
-  ChefHat,
-  CheckCircle2,
-  Clock,
-  Flame,
-  RotateCw,
-} from 'lucide-react';
+import { ChefHat, CheckCircle2, Clock, Flame, RotateCw } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Order, OrderStatus } from '@tus-antojos/shared';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { notifyOrderError, useAdvanceOrderStatus, useOrders } from '@/features/pos/api';
@@ -48,10 +41,7 @@ export function KitchenPage() {
     [activeOrders],
   );
 
-  const listos = useMemo(
-    () => activeOrders.filter((o) => o.status === 'listo'),
-    [activeOrders],
-  );
+  const listos = useMemo(() => activeOrders.filter((o) => o.status === 'listo'), [activeOrders]);
 
   const handleAdvance = async (orderId: string, to: 'en_preparacion' | 'listo') => {
     const order = activeOrders.find((o) => o.id === orderId);

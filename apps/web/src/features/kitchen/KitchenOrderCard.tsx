@@ -1,33 +1,14 @@
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Flame,
-  Loader2,
-  MessageSquare,
-  Play,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, Flame, Loader2, MessageSquare } from 'lucide-react';
 import type { Order } from '@tus-antojos/shared';
 import { Button } from '@/components/ui/button';
 import { formatOrderTime } from '@/features/pos/format';
 import { OrderStatusBadge } from '@/features/pos/OrderStatusBadge';
+import { formatElapsed } from './format';
 
 export interface KitchenOrderCardProps {
   order: Order;
   onAdvance: (orderId: string, to: 'en_preparacion' | 'listo') => void;
   isPendingAction?: boolean;
-}
-
-export function formatElapsed(createdAt: string): { label: string; isDelayed: boolean } {
-  const created = new Date(createdAt).getTime();
-  const diffMinutes = Math.floor((Date.now() - created) / 60_000);
-  if (Number.isNaN(diffMinutes) || diffMinutes < 1) {
-    return { label: 'Ahora mismo', isDelayed: false };
-  }
-  return {
-    label: `Hace ${diffMinutes} min`,
-    isDelayed: diffMinutes >= 15,
-  };
 }
 
 export function KitchenOrderCard({

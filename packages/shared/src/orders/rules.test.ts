@@ -89,12 +89,7 @@ describe('canCancel', () => {
 
     // Si ya está listo o entregado
     expect(
-      canCancel(
-        'cajero',
-        { status: 'listo', cashierId: myId, businessDate: today },
-        myId,
-        today,
-      ),
+      canCancel('cajero', { status: 'listo', cashierId: myId, businessDate: today }, myId, today),
     ).toBe(false);
   });
 });

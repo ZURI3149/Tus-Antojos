@@ -43,7 +43,7 @@ export function ordersFixtures(label: string) {
     );
     const id = row!.id;
 
-    let mainIngId = '';
+    let mainIngId: string;
     if (opts.recipe && opts.recipe.length > 0) {
       for (const r of opts.recipe) {
         await sql(
@@ -67,17 +67,21 @@ export function ordersFixtures(label: string) {
     return { id, ingredientId: mainIngId };
   }
 
-  async function promotion(productId: string, value = 20, kind: 'porcentaje' | 'monto_fijo' = 'porcentaje'): Promise<string> {
+  async function promotion(
+    productId: string,
+    value = 20,
+    kind: 'porcentaje' | 'monto_fijo' = 'porcentaje',
+  ): Promise<string> {
     const [row] = await sql<{ id: string }>(
       `insert into public.promotions (name, kind, value, starts_at, ends_at, is_active)
        values ($1, $2, $3, now() - interval '1 hour', now() + interval '1 hour', true) returning id`,
       [name('promo'), kind, value],
     );
     const id = row!.id;
-    await sql(
-      `insert into public.promotion_products (promotion_id, product_id) values ($1, $2)`,
-      [id, productId],
-    );
+    await sql(`insert into public.promotion_products (promotion_id, product_id) values ($1, $2)`, [
+      id,
+      productId,
+    ]);
     return id;
   }
 

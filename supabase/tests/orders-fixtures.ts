@@ -1,5 +1,21 @@
 import { sql } from './helpers.js';
 
+/**
+ * Los pedidos de prueba hacen avanzar el contador del día aunque luego se borren.
+ * Se devuelve cada contador al número más alto que sigue existiendo (así nunca se
+ * repite un número) y se borran los de días que ya no tienen pedidos.
+ */
+export async function resetOrderCounters(): Promise<void> {
+  await sql(
+    `delete from public.order_counters c
+     where not exists (select 1 from public.orders o where o.business_date = c.business_date)`,
+  );
+  await sql(
+    `update public.order_counters c
+     set last_number = (select max(o.order_number) from public.orders o where o.business_date = c.business_date)`,
+  );
+}
+
 export function ordersFixtures(label: string) {
   const prefix = `zz-ord-${label}-${crypto.randomUUID().slice(0, 8)}-`;
   let counter = 0;
@@ -111,6 +127,7 @@ export function ordersFixtures(label: string) {
     );
     await sql(`delete from public.ingredients where name like $1`, [like]);
     await sql(`delete from public.categories where name like $1`, [like]);
+    await resetOrderCounters();
   }
 
   return { name, category, ingredient, product, promotion, cleanup };

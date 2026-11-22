@@ -54,19 +54,21 @@ test('IN-01 e IN-08: flujo completo de compras, actualización de stock, kardex 
   await expect(page).toHaveURL(/\/admin\/compras$/);
   await expect(page.getByText('Distribuidora San Pedro E2E')).toBeVisible();
 
-  // 3. Ir a Stock e insumos: verificar que el stock de Frutillas subió a 3,5 kg y su estado es Normal
+  // 3. Ir a Stock e insumos: verificar que el stock de Frutillas subió y su estado es Normal.
+  //    Seed: compra 2000 g − merma 500 g − pedido #2 de ejemplo 180 g = 1320 g; + 2000 g = 3320 g.
+  //    (Supone una base recién creada con `pnpm db:reset`, como en el CI.)
   await page.getByRole('link', { name: 'Stock e insumos' }).click();
   await expect(page).toHaveURL(/\/admin\/inventario$/);
 
   const frutillasRow = page.getByRole('row', { name: /Frutillas/i });
-  await expect(frutillasRow.getByText('3,5 kg')).toBeVisible();
+  await expect(frutillasRow.getByText('3,32 kg')).toBeVisible();
   await expect(frutillasRow.getByText('Normal')).toBeVisible();
 
   // 4. Ver Kardex de Frutillas: verificar el nuevo movimiento y saldo
   await frutillasRow.getByRole('link', { name: 'Kardex' }).click();
   await expect(page.getByText('Historial de Frutillas')).toBeVisible();
   await expect(page.getByRole('cell', { name: '+2 kg' }).first()).toBeVisible();
-  await expect(page.getByRole('cell', { name: '3,5 kg' }).first()).toBeVisible();
+  await expect(page.getByRole('cell', { name: '3,32 kg' }).first()).toBeVisible();
 
   // 5. Volver al panel de administración /admin: verificar que la alerta de Frutillas desapareció (IN-08)
   await page.goto('/admin');

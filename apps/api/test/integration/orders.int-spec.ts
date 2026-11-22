@@ -63,6 +63,16 @@ describe('orders API contra Supabase local', () => {
     );
     await sql(`delete from public.ingredients where name like $1`, [like]);
     await sql(`delete from public.categories where name like $1`, [like]);
+    // Los pedidos de prueba hicieron avanzar el contador del día: se devuelve al número más
+    // alto que sigue existiendo (sin repetir) y se borran los de días sin pedidos.
+    await sql(
+      `delete from public.order_counters c
+       where not exists (select 1 from public.orders o where o.business_date = c.business_date)`,
+    );
+    await sql(
+      `update public.order_counters c
+       set last_number = (select max(o.order_number) from public.orders o where o.business_date = c.business_date)`,
+    );
   }
 
   beforeAll(async () => {
@@ -235,6 +245,22 @@ describe('orders API contra Supabase local', () => {
       expect(res.body.error.message).toBe('El producto no está activo para la venta');
     });
 
+    it('misma clave con otro contenido -> 409 Conflict', async () => {
+      const clientOrderId = crypto.randomUUID();
+      const first = await request(app.getHttpServer())
+        .post('/orders')
+        .set('Authorization', `Bearer ${cashierToken}`)
+        .send({ clientOrderId, items: [{ productId, quantity: 1 }], paymentMethod: 'efectivo' });
+      expect(first.status).toBe(201);
+
+      const reused = await request(app.getHttpServer())
+        .post('/orders')
+        .set('Authorization', `Bearer ${cashierToken}`)
+        .send({ clientOrderId, items: [{ productId, quantity: 2 }], paymentMethod: 'efectivo' });
+      expect(reused.status).toBe(409);
+      expect(reused.body.error.code).toBe('CONFLICT');
+    });
+
     it('rechaza a cocina -> 403 Forbidden', async () => {
       const res = await request(app.getHttpServer())
         .post('/orders')
@@ -299,7 +325,56 @@ describe('orders API contra Supabase local', () => {
     });
   });
 
+  describe('POST /orders/:id/status (permisos)', () => {
+    it('cajero no puede pasar un pedido a en_preparacion -> 403', async () => {
+      const createRes = await request(app.getHttpServer())
+        .post('/orders')
+        .set('Authorization', `Bearer ${cashierToken}`)
+        .send({
+          clientOrderId: crypto.randomUUID(),
+          items: [{ productId, quantity: 1 }],
+          paymentMethod: 'efectivo',
+        });
+      const res = await request(app.getHttpServer())
+        .post(`/orders/${createRes.body.id as string}/status`)
+        .set('Authorization', `Bearer ${cashierToken}`)
+        .send({ to: 'en_preparacion' });
+      expect(res.status).toBe(403);
+    });
+
+    it('pedido inexistente -> 404', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/orders/${crypto.randomUUID()}/status`)
+        .set('Authorization', `Bearer ${kitchenToken}`)
+        .send({ to: 'en_preparacion' });
+      expect(res.status).toBe(404);
+    });
+  });
+
   describe('POST /orders/:id/cancel', () => {
+    it('cajero no puede anular un pedido ajeno -> 403 y el pedido sigue pendiente', async () => {
+      // Lo crea el admin: para el cajero es un pedido de otro.
+      const createRes = await request(app.getHttpServer())
+        .post('/orders')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          clientOrderId: crypto.randomUUID(),
+          items: [{ productId, quantity: 1 }],
+          paymentMethod: 'efectivo',
+        });
+      expect(createRes.status).toBe(201);
+      const orderId = createRes.body.id as string;
+
+      const cancelRes = await request(app.getHttpServer())
+        .post(`/orders/${orderId}/cancel`)
+        .set('Authorization', `Bearer ${cashierToken}`)
+        .send({ reason: 'No es mío' });
+      expect(cancelRes.status).toBe(403);
+
+      const { rows } = await sql(`select status from public.orders where id = $1`, [orderId]);
+      expect(rows[0]!.status).toBe('pendiente');
+    });
+
     it('cajero anula su pedido pendiente exitosamente', async () => {
       const createRes = await request(app.getHttpServer())
         .post('/orders')

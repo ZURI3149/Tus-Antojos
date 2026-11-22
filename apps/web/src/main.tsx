@@ -15,6 +15,8 @@ import { createApiClient } from './lib/api-client';
 import { openOfflineDb } from './lib/offline/db';
 import { createOutbox } from './lib/offline/outbox';
 import { createSnapshotStore } from './lib/offline/snapshots';
+import { createBrowserTransport } from './lib/escpos/transports/browser';
+import { createSimulatedTransport } from './lib/escpos/transports/simulated';
 import { initWebSentry } from './lib/sentry';
 import { getWebEnv } from './lib/env';
 import { getSupabase } from './lib/supabase';
@@ -45,6 +47,10 @@ const services: AppServices = {
   orders: createSupabaseOrdersReader(supabase),
   outbox: createOutbox(offlineDb),
   snapshots: createSnapshotStore(offlineDb),
+  printers: [
+    createBrowserTransport(),
+    ...(getWebEnv().printerSimulated ? [createSimulatedTransport()] : []),
+  ],
 };
 
 const router = createAppRouter();

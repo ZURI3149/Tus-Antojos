@@ -12,8 +12,10 @@ import type { ApiClient } from '@/lib/api-client';
 import { ApiContext } from '@/lib/api-context';
 import type { Outbox } from '@/lib/offline/outbox';
 import type { SnapshotStore } from '@/lib/offline/snapshots';
+import type { PrinterTransport } from '@/lib/escpos/transports/types';
 import { createQueryClient } from '@/lib/query-client';
 import { OutboxProvider } from './OutboxProvider';
+import { PrintersContext } from './printers-context';
 import { SnapshotsContext } from './snapshots-context';
 
 /** Dependencias externas de la app (reales en main.tsx, falsas en pruebas). */
@@ -33,6 +35,8 @@ export interface AppServices extends AuthServices {
   outbox: Outbox;
   /** Última lectura del catálogo para la caja sin red (IndexedDB). */
   snapshots: SnapshotStore;
+  /** Formas de imprimir tickets disponibles en esta app (navegador, simulada…). */
+  printers: PrinterTransport[];
 }
 
 export function AppProviders({
@@ -54,9 +58,11 @@ export function AppProviders({
               <PromotionsReaderContext.Provider value={services.promotions}>
                 <OrdersReaderContext.Provider value={services.orders}>
                   <SnapshotsContext.Provider value={services.snapshots}>
-                    <AuthProvider services={services}>
-                      <OutboxProvider outbox={services.outbox}>{children}</OutboxProvider>
-                    </AuthProvider>
+                    <PrintersContext.Provider value={services.printers}>
+                      <AuthProvider services={services}>
+                        <OutboxProvider outbox={services.outbox}>{children}</OutboxProvider>
+                      </AuthProvider>
+                    </PrintersContext.Provider>
                   </SnapshotsContext.Provider>
                 </OrdersReaderContext.Provider>
               </PromotionsReaderContext.Provider>

@@ -14,6 +14,7 @@ import { PurchasesPage } from '@/features/inventory/PurchasesPage';
 import { StockPage } from '@/features/inventory/StockPage';
 import { KitchenPage } from '@/features/kitchen/KitchenPage';
 import { CashierOrdersPage } from '@/features/pos/CashierOrdersPage';
+import { PrinterSettingsPage } from '@/features/pos/PrinterSettingsPage';
 import { PosPage } from '@/features/pos/PosPage';
 import { NewPromotionPage } from '@/features/promotions/NewPromotionPage';
 import { PromotionEditPage } from '@/features/promotions/PromotionEditPage';
@@ -49,6 +50,7 @@ export const routes: RouteObject[] = [
                 children: [
                   { path: posSection.path, element: <PosPage /> },
                   { path: `${posSection.path}/pedidos`, element: <CashierOrdersPage /> },
+                  { path: `${posSection.path}/impresora`, element: <PrinterSettingsPage /> },
                 ],
               },
               {

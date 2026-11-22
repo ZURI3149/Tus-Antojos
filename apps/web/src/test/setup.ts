@@ -38,4 +38,6 @@ HTMLDialogElement.prototype.close ??= function () {
 
 afterEach(() => {
   cleanup();
+  // Tickets de la impresora simulada (lib/escpos/transports/simulated.ts).
+  delete window.__tusAntojosPrints;
 });

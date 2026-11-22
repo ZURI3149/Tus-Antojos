@@ -15,7 +15,14 @@ describe('parseWebEnv', () => {
       sentryDsn: undefined,
       sentryEnvironment: undefined,
       appVersion: undefined,
+      printerSimulated: false,
     });
+  });
+
+  it('la impresora simulada solo se activa con VITE_PRINTER_SIMULATED=true', () => {
+    expect(parseWebEnv({ ...valid, VITE_PRINTER_SIMULATED: 'true' }).printerSimulated).toBe(true);
+    expect(parseWebEnv({ ...valid, VITE_PRINTER_SIMULATED: 'false' }).printerSimulated).toBe(false);
+    expect(parseWebEnv({ ...valid, VITE_PRINTER_SIMULATED: '1' }).printerSimulated).toBe(false);
   });
 
   it('quita la barra final de las URLs', () => {

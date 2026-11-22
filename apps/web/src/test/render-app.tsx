@@ -5,6 +5,8 @@ import { routes } from '@/app/router';
 import { openOfflineDb } from '@/lib/offline/db';
 import { createOutbox, type Outbox } from '@/lib/offline/outbox';
 import { createSnapshotStore, type SnapshotStore } from '@/lib/offline/snapshots';
+import { createBrowserTransport } from '@/lib/escpos/transports/browser';
+import { createSimulatedTransport } from '@/lib/escpos/transports/simulated';
 import { createFakeApi, type FakeApi } from './fake-api';
 import type { FakeAuth } from './fake-auth';
 
@@ -40,6 +42,8 @@ export function renderApp(
         orders: fakeApi.orders.reader,
         outbox: offline.outbox,
         snapshots: offline.snapshots,
+        // El navegador de las pruebas no abre el diálogo de impresión; la simulada guarda lo impreso.
+        printers: [createBrowserTransport({ print: () => {} }), createSimulatedTransport()],
       }}
     >
       <RouterProvider router={router} />

@@ -119,6 +119,13 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'inventory_movements_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'inventory_movements_purchase_id_fkey';
             columns: ['purchase_id'];
             isOneToOne: false;
@@ -156,6 +163,196 @@ export type Database = {
             columns: ['ingredient_id'];
             isOneToOne: true;
             referencedRelation: 'ingredients';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      order_counters: {
+        Row: {
+          business_date: string;
+          last_number: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_date: string;
+          last_number: number;
+        };
+        Update: {
+          business_date?: string;
+          last_number?: number;
+        };
+        Relationships: [];
+      };
+      order_events: {
+        Row: {
+          created_at: string;
+          from_status: Database['public']['Enums']['order_status'] | null;
+          id: number;
+          order_id: string;
+          reason: string;
+          to_status: Database['public']['Enums']['order_status'];
+          user_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          from_status?: Database['public']['Enums']['order_status'] | null;
+          id?: never;
+          order_id: string;
+          reason?: string;
+          to_status: Database['public']['Enums']['order_status'];
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          from_status?: Database['public']['Enums']['order_status'] | null;
+          id?: never;
+          order_id?: string;
+          reason?: string;
+          to_status?: Database['public']['Enums']['order_status'];
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'order_events_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'order_events_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      order_items: {
+        Row: {
+          line_no: number;
+          line_total_cents: number;
+          note: string;
+          order_id: string;
+          product_id: string;
+          product_name: string;
+          promotion_id: string | null;
+          promotion_name: string | null;
+          quantity: number;
+          unit_discount_cents: number;
+          unit_price_cents: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          line_no: number;
+          line_total_cents: number;
+          note?: string;
+          order_id: string;
+          product_id: string;
+          product_name: string;
+          promotion_id?: string | null;
+          promotion_name?: string | null;
+          quantity: number;
+          unit_discount_cents?: number;
+          unit_price_cents: number;
+        };
+        Update: {
+          line_no?: number;
+          line_total_cents?: number;
+          note?: string;
+          order_id?: string;
+          product_id?: string;
+          product_name?: string;
+          promotion_id?: string | null;
+          promotion_name?: string | null;
+          quantity?: number;
+          unit_discount_cents?: number;
+          unit_price_cents?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'order_items_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'order_items_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'order_items_promotion_id_fkey';
+            columns: ['promotion_id'];
+            isOneToOne: false;
+            referencedRelation: 'promotions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      orders: {
+        Row: {
+          business_date: string;
+          cancel_reason: string | null;
+          cashier_id: string | null;
+          client_order_id: string;
+          created_at: string;
+          created_offline_at: string | null;
+          discount_cents: number;
+          id: string;
+          order_number: number;
+          payment_method: Database['public']['Enums']['payment_method'];
+          request_hash: string;
+          status: Database['public']['Enums']['order_status'];
+          subtotal_cents: number;
+          total_cents: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_date: string;
+          cancel_reason?: string | null;
+          cashier_id?: string | null;
+          client_order_id: string;
+          created_at?: string;
+          created_offline_at?: string | null;
+          discount_cents: number;
+          id?: string;
+          order_number: number;
+          payment_method: Database['public']['Enums']['payment_method'];
+          request_hash: string;
+          status?: Database['public']['Enums']['order_status'];
+          subtotal_cents: number;
+          total_cents: number;
+          updated_at?: string;
+        };
+        Update: {
+          business_date?: string;
+          cancel_reason?: string | null;
+          cashier_id?: string | null;
+          client_order_id?: string;
+          created_at?: string;
+          created_offline_at?: string | null;
+          discount_cents?: number;
+          id?: string;
+          order_number?: number;
+          payment_method?: Database['public']['Enums']['payment_method'];
+          request_hash?: string;
+          status?: Database['public']['Enums']['order_status'];
+          subtotal_cents?: number;
+          total_cents?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'orders_cashier_id_fkey';
+            columns: ['cashier_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -448,6 +645,18 @@ export type Database = {
         };
         Returns: undefined;
       };
+      advance_order_status: {
+        Args: {
+          p_order_id: string;
+          p_to_status: Database['public']['Enums']['order_status'];
+          p_user_id?: string;
+        };
+        Returns: Json;
+      };
+      cancel_order: {
+        Args: { p_only_cashier?: string; p_order_id: string; p_reason: string; p_user_id?: string };
+        Returns: Json;
+      };
       count_stock: {
         Args: { p_counted: number; p_ingredient_id: string; p_reason: string; p_user_id?: string };
         Returns: {
@@ -470,6 +679,16 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      create_order: {
+        Args: {
+          p_cashier_id?: string;
+          p_client_order_id: string;
+          p_created_offline_at?: string;
+          p_items: Json;
+          p_payment_method: Database['public']['Enums']['payment_method'];
+        };
+        Returns: Json;
       };
       create_product: {
         Args: {
@@ -537,6 +756,8 @@ export type Database = {
       app_role: 'cajero' | 'cocina' | 'admin';
       ingredient_unit: 'g' | 'ml' | 'unidad';
       inventory_movement_type: 'compra' | 'venta' | 'merma' | 'ajuste' | 'anulacion';
+      order_status: 'pendiente' | 'en_preparacion' | 'listo' | 'entregado' | 'anulado';
+      payment_method: 'efectivo' | 'qr';
       promotion_kind: 'porcentaje' | 'monto_fijo';
     };
     CompositeTypes: {
@@ -652,6 +873,8 @@ export const Constants = {
       app_role: ['cajero', 'cocina', 'admin'],
       ingredient_unit: ['g', 'ml', 'unidad'],
       inventory_movement_type: ['compra', 'venta', 'merma', 'ajuste', 'anulacion'],
+      order_status: ['pendiente', 'en_preparacion', 'listo', 'entregado', 'anulado'],
+      payment_method: ['efectivo', 'qr'],
       promotion_kind: ['porcentaje', 'monto_fijo'],
     },
   },

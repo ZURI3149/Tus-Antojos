@@ -1,6 +1,8 @@
 import { APP_ROLES } from '@tus-antojos/shared';
 import { createBrowserRouter, type RouteObject } from 'react-router';
 import { AdminPage } from '@/features/admin/AdminPage';
+import { OrderDetailPage } from '@/features/admin/orders/OrderDetailPage';
+import { OrdersPage } from '@/features/admin/orders/OrdersPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { CategoriesPage } from '@/features/catalog/CategoriesPage';
 import { IngredientsPage } from '@/features/catalog/IngredientsPage';
@@ -11,6 +13,7 @@ import { PurchaseForm } from '@/features/inventory/PurchaseForm';
 import { PurchasesPage } from '@/features/inventory/PurchasesPage';
 import { StockPage } from '@/features/inventory/StockPage';
 import { KitchenPage } from '@/features/kitchen/KitchenPage';
+import { CashierOrdersPage } from '@/features/pos/CashierOrdersPage';
 import { PosPage } from '@/features/pos/PosPage';
 import { NewPromotionPage } from '@/features/promotions/NewPromotionPage';
 import { PromotionEditPage } from '@/features/promotions/PromotionEditPage';
@@ -43,7 +46,10 @@ export const routes: RouteObject[] = [
             children: [
               {
                 element: <RequireRole allowed={posSection.roles} />,
-                children: [{ path: posSection.path, element: <PosPage /> }],
+                children: [
+                  { path: posSection.path, element: <PosPage /> },
+                  { path: `${posSection.path}/pedidos`, element: <CashierOrdersPage /> },
+                ],
               },
               {
                 element: <RequireRole allowed={kitchenSection.roles} />,
@@ -53,6 +59,8 @@ export const routes: RouteObject[] = [
                 element: <RequireRole allowed={adminSection.roles} />,
                 children: [
                   { path: adminSection.path, element: <AdminPage /> },
+                  { path: `${adminSection.path}/pedidos`, element: <OrdersPage /> },
+                  { path: `${adminSection.path}/pedidos/:id`, element: <OrderDetailPage /> },
                   { path: `${adminSection.path}/usuarios`, element: <UsersPage /> },
                   { path: `${adminSection.path}/promociones`, element: <PromotionsPage /> },
                   {

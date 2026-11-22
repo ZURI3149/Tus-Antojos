@@ -53,6 +53,33 @@ async function sellOneCono(page: Page): Promise<void> {
   await expect(cart.getByText('El carrito está vacío')).toBeVisible();
 }
 
+test('CE-13: la app es instalable (manifest válido y service worker que controla la página)', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/login');
+  await waitForServiceWorker(page);
+
+  // Lo que Chrome exige para ofrecer "Instalar": manifest enlazado con nombre, íconos de 192 y
+  // 512 px, start_url y display standalone, más un service worker que controle la página.
+  const href = await page.locator('link[rel="manifest"]').getAttribute('href');
+  expect(href).toBeTruthy();
+  const manifest = (await (await request.get(new URL(href!, page.url()).href)).json()) as {
+    name?: string;
+    short_name?: string;
+    start_url?: string;
+    display?: string;
+    icons?: { sizes?: string; type?: string }[];
+  };
+  expect(manifest.name).toBe('Tus Antojos');
+  expect(manifest.short_name).toBeTruthy();
+  expect(manifest.start_url).toBe('/');
+  expect(manifest.display).toBe('standalone');
+  const sizes = (manifest.icons ?? []).map((i) => i.sizes);
+  expect(sizes).toEqual(expect.arrayContaining(['192x192', '512x512']));
+  expect(await page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+});
+
 test.describe('caja sin conexión', () => {
   let created: string[] = [];
 

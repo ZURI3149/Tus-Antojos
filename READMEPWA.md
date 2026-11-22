@@ -18,7 +18,7 @@ La PWA tiene tres componentes principales:
 | **Service worker**      | Guarda una copia de la aplicación en el navegador y decide cuándo usar archivos guardados            |
 | **Capa de integración** | Conecta la actualización del service worker con avisos visibles y permite comprobar versiones nuevas |
 
-Importante: **PWA no significa que todos los datos estén disponibles sin conexión**. La PWA guarda el código y las imágenes, pero el login, la base de datos, Realtime y los pagos necesitan internet.
+Importante: **PWA no significa que todos los datos estén disponibles sin conexión**. La PWA guarda el código y las imágenes; además, la caja guarda en IndexedDB una copia del catálogo y una **cola de pedidos cobrados en efectivo** que se envían solos al volver la conexión (sección 7). Iniciar sesión por primera vez, la cocina en tiempo real, el pago QR y la administración necesitan internet.
 
 ---
 
@@ -39,7 +39,7 @@ Vercel entrega el sitio por HTTPS. El manifest se genera durante el build. El se
 - **Precache:** descarga con anticipación el JavaScript, el CSS y las imágenes del build.
 - **Runtime cache:** guarda recursos encontrados durante el uso, por ejemplo fotos del catálogo.
 - **Service worker:** proceso del navegador que controla las solicitudes de red de la aplicación.
-- **IndexedDB:** almacenamiento local del navegador reservado para datos que deben sobrevivir una recarga o la pérdida de conexión. Todavía no contiene la cola offline de pedidos.
+- **IndexedDB:** almacenamiento local del navegador para datos que deben sobrevivir una recarga o la pérdida de conexión. Guarda la cola offline de pedidos y la última copia del catálogo de la caja (base `tus-antojos`).
 - **Sincronización:** proceso posterior que envía pedidos offline al servidor al recuperar la conexión.
 
 ---
@@ -48,15 +48,13 @@ Vercel entrega el sitio por HTTPS. El manifest se genera durante el build. El se
 
 ### 3.1 Continuidad en la caja
 
-El problema central es que una caída de internet no debería obligar a cerrar la caja. La PWA permite que la interfaz cargue sin conexión y prepara la base para guardar pedidos localmente.
+El problema central es que una caída de internet no debería obligar a cerrar la caja. Con el módulo `offline-print`:
 
-Sin embargo, el límite actual es preciso:
-
-- Sí está preparada la PWA y la caché del app shell.
-- Sí está previsto que la caja pueda crear pedidos sin red.
-- Todavía no está implementada la cola en IndexedDB ni el aviso de estado de red.
-- Por eso, actualmente no se debe presentar como comprobado el flujo completo de “crear pedidos offline y sincronizarlos”.
-- Cuando el módulo `offline-print` esté implementado, según el `SPEC.md`, sin internet solo se aceptarán pagos en efectivo.
+- La interfaz carga sin conexión desde el service worker.
+- La caja usa la última copia guardada del catálogo y de las promociones.
+- Cada venta en **efectivo** sin red queda en una cola en IndexedDB, sobrevive a recargas y se envía sola al volver la conexión, **sin duplicarse** (cada pedido lleva un `clientOrderId` único y la API es idempotente).
+- Sin red **solo se cobra en efectivo**: el pago QR necesita conexión (`SPEC.md` S7).
+- Está comprobado con una prueba E2E: 20 ventas sin red, recarga, y sincronización en menos de 10 s sin duplicados (CE-06).
 
 ### 3.2 Un solo código para varios dispositivos
 
@@ -109,7 +107,7 @@ La política de Vercel permite:
 - `usb=(self)` para WebUSB.
 - `serial=(self)` para Web Serial.
 
-Si el navegador o el hardware no admite WebUSB/Web Serial, el respaldo funcional previsto es `window.print()` usando una plantilla de 80 mm.
+Si el navegador o el hardware no admite WebUSB/Web Serial, el respaldo es imprimir con el navegador (`window.print()`) usando una plantilla de 80 o 58 mm; ya está implementado (sección 8, _Impresión_).
 
 ---
 
@@ -153,8 +151,9 @@ Navegador
          +--> API NestJS
          |    (requieren conexión)
          |
-         +--> IndexedDB
-              (queda reservada para la cola offline futura)
+         +--> IndexedDB (base "tus-antojos")
+              +--> outbox: pedidos cobrados sin conexión
+              +--> snapshots: última copia del catálogo de la caja
 ```
 
 El navegador controla los archivos guardados. React controla la interfaz. Supabase y NestJS controlan datos y operaciones en servidor.
@@ -243,7 +242,7 @@ Por diseño no se almacenan automáticamente en caché:
 - Suscripciones Realtime.
 - Respuestas de la API NestJS.
 
-Esto evita mostrar usuarios, inventarios o precios antiguos como si fueran datos vigentes. La cola offline se debe implementar por separado con IndexedDB.
+Esto evita mostrar usuarios, inventarios o precios antiguos como si fueran datos vigentes. La cola offline y la copia del catálogo van por separado, en IndexedDB, y la caja avisa cuando muestra datos guardados ("Catálogo del dd/mm hh:mm").
 
 #### Limpieza y toma de control
 
@@ -315,19 +314,27 @@ Con el service worker correctamente instalado:
 
 El límite actual se resume así:
 
-| Función                                                | Sin conexión                                |
-| ------------------------------------------------------ | ------------------------------------------- |
-| Abrir la aplicación y navegar por la interfaz cacheada | Sí, si el precache terminó                  |
-| Ver fotos guardadas                                    | Sí, según caché                             |
-| Ver datos recién consultados                           | No garantizado                              |
-| Iniciar sesión                                         | No                                          |
-| Consultar Supabase o Realtime                          | No                                          |
-| Crear pedidos en servidor                              | No                                          |
-| Pagar por QR                                           | No                                          |
-| Cobrar en efectivo offline                             | Previsto, no implementado en la cola actual |
-| Sincronizar pedidos sin duplicarlos                    | Previsto, no implementado                   |
+| Función                                                | Sin conexión                                                     |
+| ------------------------------------------------------ | ---------------------------------------------------------------- |
+| Abrir la aplicación y navegar por la interfaz cacheada | Sí, si el precache terminó                                       |
+| Ver fotos guardadas                                    | Sí, según caché                                                  |
+| Abrir la caja con la sesión ya iniciada                | Sí, con el último perfil conocido                                |
+| Ver el catálogo y las promociones en la caja           | Sí, la última copia guardada (con su fecha)                      |
+| Cobrar en efectivo                                     | Sí: el pedido queda en la cola con número provisional `OFF-XXXX` |
+| Imprimir el ticket                                     | Sí, con la leyenda "PENDIENTE DE SINCRONIZAR"                    |
+| Sincronizar pedidos sin duplicarlos                    | Sí, solo al volver la conexión                                   |
+| Iniciar sesión por primera vez en el dispositivo       | No                                                               |
+| Pagar por QR                                           | No (el botón se deshabilita)                                     |
+| Cocina en tiempo real, administración, reportes        | No                                                               |
 
-No se deben presentar ventas offline como disponibles hasta que el módulo `offline-print` haya sido implementado y probado.
+**Cómo funciona la cola** (`apps/web/src/lib/offline/`):
+
+- Cada pedido guarda el cuerpo exacto de `POST /orders`. Al volver la red se envían de a uno y en orden; si el servidor ya lo tenía (se perdió la respuesta), contesta `200` y no se duplica.
+- Sin red o con error del servidor se reintenta con espera creciente (1 s, 2 s, 4 s… hasta 60 s).
+- Si el servidor rechaza un pedido (por ejemplo, un producto desactivado mientras no había red), pasa a **"por revisar"** en `/caja/pedidos`: se puede **Reintentar** o **Descartar** con un motivo.
+- Solo se envían los pedidos del cajero con la sesión abierta. Cerrar sesión con pedidos pendientes pide confirmación; la cola se conserva.
+- El indicador del encabezado muestra "En línea", "Modo sin conexión · N sin enviar" o "Sincronizando N".
+- Si el total que calcula el servidor difiere de lo cobrado (cambió un precio o una promoción), se avisa al sincronizar.
 
 ---
 
@@ -343,13 +350,20 @@ Cachear API y autenticación podría mostrar pedidos, usuarios o stock de otro m
 
 ### Cola offline separada
 
-El service worker no reemplaza una cola de datos. Los pedidos offline deberán guardarse en IndexedDB y sincronizarse mediante una lógica propia que use un identificador único para evitar duplicados.
+El service worker no reemplaza una cola de datos. Los pedidos offline se guardan en IndexedDB y se sincronizan con lógica propia (`lib/offline/sync.ts`) usando el `clientOrderId` único de cada pedido para evitar duplicados. Cambiar el formato de la cola exige subir su versión con una migración (`lib/offline/db.ts`), porque puede haber pedidos encolados en las cajas.
 
 ### Impresión
 
 WebUSB y Web Serial tienen compatibilidad limitada. Safari no es compatible con este mecanismo. Para el escritorio de caja se recomienda Chrome o Edge.
 
-La impresión debe evitar cambios que dependen de un pedido ya enviado al servidor: el ticket debe indicarse con una plantilla de 80 mm y un procedimiento probado.
+Qué está implementado (`apps/web/src/lib/escpos/`):
+
+- **Ticket ESC/POS** de 80 mm (48 columnas) o 58 mm (32), con tildes y ñ en la página de códigos CP858, o solo ASCII si la impresora no la soporta.
+- **Imprimir con el navegador**: plantilla de 80/58 mm y `window.print()`. Es la opción por defecto y el respaldo cuando algo falla.
+- **Configuración por caja** en `/caja/impresora`: forma de imprimir, ancho del papel, impresión automática al cobrar, copias, encabezado (nombre, dirección, NIT) y pie, con vista previa y **Ticket de prueba**.
+- **La impresión nunca bloquea la venta**: si falla, el aviso ofrece **Reintentar** o **Imprimir con el navegador**. Cada pedido se puede **Reimprimir** desde `/caja/pedidos`.
+
+Pendiente: la conexión directa por **Web Serial / WebUSB** espera conocer el modelo de la impresora (`SPEC.md` P4).
 
 ---
 
@@ -429,7 +443,10 @@ Resultado esperado:
 - La interfaz inicial carga.
 - Las rutas conocidas pueden resolverse.
 - Las fotos en caché se muestran.
-- Login, API, pagos QR y datos nuevos no quedan disponibles.
+- Si ya habías iniciado sesión, `/caja` abre con el aviso "Modo sin conexión" y el catálogo guardado.
+- Una venta en efectivo queda como `OFF-XXXX`; en `/caja/pedidos` aparece en **Sin sincronizar**.
+- Al desmarcar **Offline**, el pedido se envía solo y desaparece de la cola.
+- El pago QR, la cocina en tiempo real y la administración no quedan disponibles.
 
 ### 10.4 Probar una actualización
 
@@ -460,10 +477,18 @@ Confirmar que abre sin pestañas del navegador y conserva el nombre e icono defi
 - Que la actualización solo ocurre al pulsar **Actualizar**.
 - Que **Más tarde** pospone sin actualizar.
 
+Además:
+
+- `src/lib/offline/*.test.ts` prueban la cola, la sincronización (reintentos, 401, "por revisar") y el candado entre pestañas.
+- `src/lib/escpos/*.test.ts` prueban los bytes ESC/POS y el contenido del ticket.
+- `e2e/offline.spec.ts` corre contra el **build de producción** con service worker (proyecto `offline` de Playwright): CE-13 (manifest e instalación) y CE-06 (20 ventas sin red → recarga → sincronización).
+- `e2e/ticket.spec.ts` vende 3 productos e imprime el ticket con la impresora simulada (CE-01).
+
 Ejecutar:
 
 ```bash
 pnpm --filter @tus-antojos/web test -- PwaUpdater.test.tsx
+pnpm --filter @tus-antojos/web exec playwright test --project=offline
 ```
 
 ---
@@ -552,7 +577,8 @@ Comprobar:
 - Permisos USB/serial concedidos.
 - Modelo de impresora compatible con ESC/POS.
 - Política de permisos de Vercel.
-- Uso de respaldo `window.print()` si WebUSB o Web Serial no están disponibles.
+- En `/caja/impresora`, elegir **Imprimir con el navegador** y usar **Ticket de prueba**.
+- Si salen símbolos raros en lugar de tildes, activar **Solo caracteres básicos**.
 
 ### iPhone no ofrece instalación automática
 
@@ -566,11 +592,11 @@ Instalar manualmente desde Safari:
 
 ### ¿Funciona completamente sin internet?
 
-No. La interfaz y los recursos guardados sí pueden cargarse; login, datos, Realtime y pagos siguen necesitando conexión. La cola offline de pedidos está prevista pero no implementada.
+No del todo. La caja sí: abre, muestra el catálogo guardado y cobra en efectivo. Iniciar sesión por primera vez, la cocina en tiempo real, el pago QR y la administración necesitan conexión.
 
 ### ¿Se puede vender con efectivo sin internet?
 
-Todavía no está implementado el flujo completo probado. El `SPEC.md` establece que será permitido cuando exista el módulo offline.
+Sí. El pedido queda en la cola con un número provisional (`OFF-XXXX`), se imprime el ticket con la leyenda "PENDIENTE DE SINCRONIZAR" y se envía solo al volver la conexión.
 
 ### ¿Es una aplicación nativa?
 
@@ -582,11 +608,11 @@ No. Revisa cada hora y solicita confirmación antes de recargar.
 
 ### ¿Qué datos conserva sin conexión?
 
-Conserva el build de la aplicación y hasta 300 fotos del catálogo durante 30 días. No conserva automáticamente usuarios, pedidos, inventario ni respuestas de API.
+Conserva el build de la aplicación, hasta 300 fotos del catálogo durante 30 días, la última copia del catálogo y las promociones de la caja, el último perfil del cajero y la cola de pedidos sin enviar. No conserva inventario, usuarios ni respuestas de la API.
 
 ### ¿Se puede enviar una venta sin duplicarla al volver internet?
 
-Esa garantía forma parte del diseño futuro con IndexedDB e identificador único de pedido. La PWA por sí sola no garantiza idempotencia.
+Sí. Cada pedido lleva un `clientOrderId` único y la API devuelve el pedido existente si llega dos veces. Está probado en la base de datos (5 reenvíos en paralelo → 1 pedido) y en la E2E offline (20 pedidos → 20 en la base).
 
 ### ¿Se puede usar Safari en caja?
 
@@ -622,3 +648,6 @@ Sí para navegar e instalar en iOS, pero el flujo de impresión USB/serial está
 - Montaje React: `apps/web/src/main.tsx`.
 - Generación de iconos: `apps/web/pwa-assets.config.ts`.
 - Despliegue: `apps/web/vercel.json`.
+- Cola offline y sincronización: `apps/web/src/lib/offline/` y `apps/web/src/app/OutboxProvider.tsx`.
+- Tickets e impresión: `apps/web/src/lib/escpos/` y `apps/web/src/features/pos/PrinterSettingsPage.tsx`.
+- Spec del módulo: `specs/SPEC-offline-print.md`.

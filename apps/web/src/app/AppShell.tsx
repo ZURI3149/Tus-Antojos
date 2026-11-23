@@ -50,7 +50,7 @@ export function AppShell() {
             to="/"
             className="flex items-center gap-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <picture>
+            <picture className="contents">
               <source srcSet="/logo1.webp" type="image/webp" />
               <img
                 src="/logo1.png"

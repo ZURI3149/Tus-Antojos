@@ -50,7 +50,7 @@ export function LoginPage() {
         aria-label="Tus Antojos, tucumanas artesanales"
         className="relative min-h-[260px] overflow-hidden bg-[#090909] sm:min-h-[350px] lg:min-h-svh"
       >
-        <picture>
+        <picture className="contents">
           <source srcSet="/login-tus-antojos.webp" type="image/webp" />
           <img
             src="/login-tus-antojos.png"
@@ -64,7 +64,7 @@ export function LoginPage() {
         <div className="flex w-full max-w-md flex-col gap-8">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="flex size-20 items-center justify-center overflow-hidden rounded-xl bg-[#111111] p-2">
-              <picture>
+              <picture className="contents">
                 <source srcSet="/logo1.webp" type="image/webp" />
                 <img
                   src="/logo1.png"

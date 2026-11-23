@@ -18,6 +18,23 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password');
   });
 
+  it('muestra la imagen promocional y el logo con formato picture y estilos transparentes al layout', async () => {
+    renderApp('/login', createFakeAuth());
+    const heroImg = await screen.findByAltText('Tus Antojos: Cada tucumana, un antojo irresistible');
+    expect(heroImg).toHaveAttribute('src', '/login-tus-antojos.png');
+    const heroPicture = heroImg.closest('picture');
+    expect(heroPicture).not.toBeNull();
+    expect(heroPicture?.querySelector('source')).toHaveAttribute('srcset', '/login-tus-antojos.webp');
+    expect(heroPicture).toHaveClass('contents');
+
+    const logoImg = screen.getByAltText('Tus Antojos - Tucumanas');
+    expect(logoImg).toHaveAttribute('src', '/logo1.png');
+    const logoPicture = logoImg.closest('picture');
+    expect(logoPicture).not.toBeNull();
+    expect(logoPicture?.querySelector('source')).toHaveAttribute('srcset', '/logo1.webp');
+    expect(logoPicture).toHaveClass('contents');
+  });
+
   it('valida en el cliente con mensajes en español, sin llamar a Supabase', async () => {
     const fake = createFakeAuth();
     renderApp('/login', fake);

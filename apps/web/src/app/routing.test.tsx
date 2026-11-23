@@ -27,6 +27,16 @@ describe('redirección por rol', () => {
     await expectPage(router, home);
   });
 
+  it('muestra el logo de la marca en la barra de navegación con formato picture y clase contents', async () => {
+    renderApp('/caja', createFakeAuth({ session: 'cajero' }));
+    const logoImg = await screen.findByAltText('Logo Tus Antojos');
+    expect(logoImg).toHaveAttribute('src', '/logo1.png');
+    const picture = logoImg.closest('picture');
+    expect(picture).not.toBeNull();
+    expect(picture?.querySelector('source')).toHaveAttribute('srcset', '/logo1.webp');
+    expect(picture).toHaveClass('contents');
+  });
+
   it.each([
     ['cajero', '/caja'],
     ['cocina', '/cocina'],
@@ -164,6 +174,8 @@ describe('otras rutas', () => {
     expect(
       await screen.findByRole('heading', { name: 'Página no encontrada' }),
     ).toBeInTheDocument();
+    const logo = screen.getByAltText('Logo Tus Antojos');
+    expect(logo).toHaveAttribute('src', '/logo1.png');
   });
 
   it('/sin-acceso ofrece volver al inicio propio', async () => {

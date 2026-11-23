@@ -15,7 +15,14 @@ export function FullPageMessage({
   return (
     <main className="flex min-h-svh items-center justify-center bg-secondary p-4">
       <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-md border-t-4 border-primary bg-card px-6 py-10 text-center shadow-sm">
-        <img src="/logo.svg" alt="" className="size-12" />
+        <picture className="contents">
+          <source srcSet="/logo1.webp" type="image/webp" />
+          <img
+            src="/logo1.png"
+            alt="Logo Tus Antojos"
+            className="size-12 rounded-md object-contain"
+          />
+        </picture>
         <div className="flex flex-col gap-1">
           <p className="eyebrow">{eyebrow}</p>
           <h1 className="page-title text-xl">{title}</h1>

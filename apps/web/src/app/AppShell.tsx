@@ -50,10 +50,14 @@ export function AppShell() {
             to="/"
             className="flex items-center gap-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <img src="/logo.svg" alt="" className="size-9" />
-            <span className="font-heading text-lg font-normal tracking-[0.22em] uppercase">
-              Tus <span className="text-primary">Antojos</span>
-            </span>
+       <img
+  src="/logo1.png"
+  alt="Logo Tus Antojos"
+  className="size-10 rounded-md object-contain"
+/>
+<span className="font-heading text-lg font-normal tracking-[0.22em] uppercase">
+  Tus <span className="text-primary">Antojos</span>
+</span>
           </Link>
           <nav aria-label="Principal" className="-mx-1 flex overflow-x-auto">
             {sections.map((section) => (

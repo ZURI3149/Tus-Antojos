@@ -1,4 +1,3 @@
-
 // Crea apps/api/.env y apps/web/.env para el entorno LOCAL
 // a partir de `supabase status`.
 //
@@ -16,25 +15,17 @@ let status;
 try {
   if (process.platform === 'win32') {
     // En Windows ejecutamos Supabase CLI mediante pnpm.
-    status = execFileSync(
-      'cmd.exe',
-      ['/d', '/s', '/c', 'pnpm exec supabase status -o env'],
-      {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
-      },
-    );
+    status = execFileSync('cmd.exe', ['/d', '/s', '/c', 'pnpm exec supabase status -o env'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
   } else {
     // En Linux y macOS se utiliza la CLI directamente.
-    status = execFileSync(
-      'supabase',
-      ['status', '-o', 'env'],
-      {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      },
-    );
+    status = execFileSync('supabase', ['status', '-o', 'env'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
   }
 } catch (error) {
   console.error(
@@ -50,9 +41,7 @@ try {
 
 // Extraer variables del resultado de Supabase.
 const vars = Object.fromEntries(
-  [...status.matchAll(/^([A-Z0-9_]+)="?(.*?)"?$/gm)].map(
-    (match) => [match[1], match[2]],
-  ),
+  [...status.matchAll(/^([A-Z0-9_]+)="?(.*?)"?$/gm)].map((match) => [match[1], match[2]]),
 );
 
 const apiUrl = vars.API_URL;
@@ -61,9 +50,7 @@ const serviceRoleKey = vars.SERVICE_ROLE_KEY;
 
 // Comprobar que Supabase devolvió las credenciales necesarias.
 if (!apiUrl || !publicKey || !serviceRoleKey) {
-  console.error(
-    '`supabase status` no devolvió API_URL, la clave pública o SERVICE_ROLE_KEY.',
-  );
+  console.error('`supabase status` no devolvió API_URL, la clave pública o SERVICE_ROLE_KEY.');
   process.exit(1);
 }
 

@@ -44,31 +44,37 @@ export function LoginPage() {
   });
 
   return (
-    <main className="grid min-h-svh bg-background lg:grid-cols-[1.08fr_0.92fr]">
+    <main className="login-scope grid min-h-svh bg-background lg:grid-cols-[1.08fr_0.92fr]">
       {/* Imagen de marca: contiene el logo y la frase promocional. */}
-     <section
-  aria-label="Tus Antojos, tucumanas artesanales"
-  className="relative min-h-[260px] overflow-hidden bg-[#090909] sm:min-h-[350px] lg:min-h-svh"
->
-  <img
-    src="/login-tus-antojos.png"
-    alt="Tus Antojos: Cada tucumana, un antojo irresistible"
-    className="absolute inset-0 h-full w-full object-cover object-left"
-  />
-</section>
+      <section
+        aria-label="Tus Antojos, tucumanas artesanales"
+        className="relative min-h-[260px] overflow-hidden bg-[#090909] sm:min-h-[350px] lg:min-h-svh"
+      >
+        <picture>
+          <source srcSet="/login-tus-antojos.webp" type="image/webp" />
+          <img
+            src="/login-tus-antojos.png"
+            alt="Tus Antojos: Cada tucumana, un antojo irresistible"
+            className="absolute inset-0 h-full w-full object-cover object-left"
+          />
+        </picture>
+      </section>
       {/* Formulario: se conserva íntegra la autenticación existente. */}
       <section className="flex items-center justify-center bg-background px-6 py-12 sm:px-10 lg:px-14">
         <div className="flex w-full max-w-md flex-col gap-8">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="flex size-20 items-center justify-center overflow-hidden rounded-xl bg-[#111111] p-2">
-  <img
-  src="/logo1.png"
-  alt="Tus Antojos - Tucumanas"
-  className="h-full w-full object-contain"
-/>
-</div>
+              <picture>
+                <source srcSet="/logo1.webp" type="image/webp" />
+                <img
+                  src="/logo1.png"
+                  alt="Tus Antojos - Tucumanas"
+                  className="h-full w-full object-contain"
+                />
+              </picture>
+            </div>
             <div className="flex flex-col gap-1">
-              <p className="eyebrow">Punto de venta y gestión</p>
+              <p className="eyebrow text-muted-foreground">Punto de venta y gestión</p>
               <h1 className="page-title">Iniciar sesión</h1>
             </div>
             <span aria-hidden className="block h-0.5 w-12 bg-primary" />
@@ -120,9 +126,7 @@ export function LoginPage() {
               </Button>
             </FieldGroup>
           </form>
-          <p className="text-center text-xs text-muted-foreground">
-            Tus Antojos · Tucumanas
-          </p>
+          <p className="text-center text-xs text-muted-foreground">Tus Antojos · Tucumanas</p>
         </div>
       </section>
     </main>

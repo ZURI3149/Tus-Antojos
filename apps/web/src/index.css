@@ -54,14 +54,49 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Identidad visual Tus Antojos: blanco, negro y grises neutros. */
+/*
+ * Identidad visual inspirada en pastelería artesanal: rojo profundo como acento,
+ * texto casi negro, fondos crema cálidos y un dorado para destacar.
+ */
 :root {
   --background: #ffffff;
-  --foreground: #111111;
+  --foreground: #222222;
   --card: #ffffff;
-  --card-foreground: #111111;
+  --card-foreground: #222222;
   --popover: #ffffff;
-  --popover-foreground: #111111;
+  --popover-foreground: #222222;
+  --primary: #ab0909;
+  --primary-foreground: #ffffff;
+  --secondary: #f7f2ed;
+  --secondary-foreground: #222222;
+  --muted: #f7f2ed;
+  --muted-foreground: #6b625c;
+  --accent: #fbf1d6;
+  --accent-foreground: #5a4300;
+  --gold: #f4d06f;
+  --gold-foreground: #3d2c00;
+  --destructive: #c2410c;
+  --border: #e9e1d9;
+  --input: #d8cfc6;
+  --ring: #ab0909;
+  --chart-1: #ab0909;
+  --chart-2: #f4d06f;
+  --chart-3: #6b625c;
+  --chart-4: #d97757;
+  --chart-5: #222222;
+  --radius: 0.375rem;
+  --sidebar: #f7f2ed;
+  --sidebar-foreground: #222222;
+  --sidebar-primary: #ab0909;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fbf1d6;
+  --sidebar-accent-foreground: #5a4300;
+  --sidebar-border: #e9e1d9;
+  --sidebar-ring: #ab0909;
+}
+
+/* Ámbito de estilo independiente para la pantalla de inicio de sesión */
+.login-scope {
   --primary: #111111;
   --primary-foreground: #ffffff;
   --secondary: #f3f3f3;
@@ -76,20 +111,7 @@
   --border: #e5e5e5;
   --input: #d4d4d4;
   --ring: #737373;
-  --chart-1: #111111;
-  --chart-2: #737373;
-  --chart-3: #a3a3a3;
-  --chart-4: #d4d4d4;
-  --chart-5: #f59e0b;
   --radius: 0.5rem;
-  --sidebar: #fafafa;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #111111;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eeeeee;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #737373;
 }
 
 .dark {

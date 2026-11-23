@@ -34,7 +34,7 @@ describe('redirección por rol', () => {
   ] as [AppRole, string][])('al iniciar sesión, %s llega a %s', async (role, home) => {
     const { router } = renderApp('/login', createFakeAuth());
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText('Correo'), TEST_USERS[role].email);
+    await user.type(await screen.findByLabelText('Correo electrónico'), TEST_USERS[role].email);
     await user.type(screen.getByLabelText('Contraseña'), 'x');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     await expectPage(router, home);
@@ -76,7 +76,7 @@ describe('rutas protegidas', () => {
     const { router } = renderApp('/cocina', createFakeAuth());
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText('Correo'), TEST_USERS.admin.email);
+    await user.type(await screen.findByLabelText('Correo electrónico'), TEST_USERS.admin.email);
     await user.type(screen.getByLabelText('Contraseña'), 'x');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     await expectPage(router, '/cocina');

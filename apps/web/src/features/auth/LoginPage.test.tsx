@@ -6,7 +6,7 @@ import { renderApp } from '@/test/render-app';
 describe('LoginPage', () => {
   async function fill(email: string, password: string) {
     const user = userEvent.setup();
-    if (email) await user.type(screen.getByLabelText('Correo'), email);
+    if (email) await user.type(screen.getByLabelText('Correo electrónico'), email);
     if (password) await user.type(screen.getByLabelText('Contraseña'), password);
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
   }
@@ -14,18 +14,18 @@ describe('LoginPage', () => {
   it('muestra el formulario con campos accesibles', async () => {
     renderApp('/login', createFakeAuth());
     expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Correo')).toHaveAttribute('type', 'email');
+    expect(screen.getByLabelText('Correo electrónico')).toHaveAttribute('type', 'email');
     expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password');
   });
 
   it('valida en el cliente con mensajes en español, sin llamar a Supabase', async () => {
     const fake = createFakeAuth();
     renderApp('/login', fake);
-    await screen.findByLabelText('Correo');
+    await screen.findByLabelText('Correo electrónico');
     await fill('no-es-correo', '');
     expect(await screen.findByText('Ingresa un correo válido')).toBeInTheDocument();
     expect(screen.getByText('Ingresa tu contraseña')).toBeInTheDocument();
-    expect(screen.getByLabelText('Correo')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Correo electrónico')).toHaveAttribute('aria-invalid', 'true');
     expect(fake.mocks.signInWithPassword).not.toHaveBeenCalled();
   });
 
@@ -36,7 +36,7 @@ describe('LoginPage', () => {
       error: { name: 'AuthApiError', code: 'invalid_credentials', status: 400, message: 'x' },
     } as never);
     renderApp('/login', fake);
-    await screen.findByLabelText('Correo');
+    await screen.findByLabelText('Correo electrónico');
     await fill('cajero@tusantojos.test', 'mala');
     expect(await screen.findByRole('alert')).toHaveTextContent('Correo o contraseña incorrectos');
     expect(screen.getByLabelText('Contraseña')).toHaveValue('');
@@ -49,7 +49,7 @@ describe('LoginPage', () => {
       error: { name: 'AuthRetryableFetchError', status: 0, message: 'Failed to fetch' },
     } as never);
     renderApp('/login', fake);
-    await screen.findByLabelText('Correo');
+    await screen.findByLabelText('Correo electrónico');
     await fill('cajero@tusantojos.test', 'x');
     expect(await screen.findByRole('alert')).toHaveTextContent(/No se pudo conectar/);
   });
@@ -57,7 +57,7 @@ describe('LoginPage', () => {
   it('credenciales válidas → envía el correo normalizado y sale del login', async () => {
     const fake = createFakeAuth();
     renderApp('/login', fake);
-    await screen.findByLabelText('Correo');
+    await screen.findByLabelText('Correo electrónico');
     await fill('  Cajero@TusAntojos.test', 'TusAntojos-local-2026');
     await waitFor(() =>
       expect(fake.mocks.signInWithPassword).toHaveBeenCalledWith({
@@ -79,7 +79,7 @@ describe('LoginPage', () => {
     const { router } = renderApp('/login', fake);
     await router.navigate('/login', { state: { from: '//sitio-malicioso.com' } });
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText('Correo'), 'cocina@tusantojos.test');
+    await user.type(await screen.findByLabelText('Correo electrónico'), 'cocina@tusantojos.test');
     await user.type(screen.getByLabelText('Contraseña'), 'x');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/cocina'));

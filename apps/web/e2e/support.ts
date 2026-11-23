@@ -27,7 +27,7 @@ export const SEED_USERS = {
 } as const;
 
 export async function login(page: Page, email: string, password = SEED_PASSWORD): Promise<void> {
-  await page.getByLabel('Correo').fill(email);
+  await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña').fill(password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
 }

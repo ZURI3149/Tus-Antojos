@@ -44,45 +44,43 @@ export function LoginPage() {
   });
 
   return (
-    <main className="grid min-h-svh bg-background lg:grid-cols-2">
-      {/* Panel de marca: solo en pantallas grandes. */}
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-primary p-12 text-primary-foreground lg:flex">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full border-[40px] border-white/10"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-16 -left-16 size-64 rounded-full bg-gold/15"
-        />
-        <span className="relative font-heading text-xl tracking-[0.3em] uppercase">
-          Tus Antojos
-        </span>
-        <div className="relative flex max-w-md flex-col gap-4">
-          <p className="font-heading text-sm font-light tracking-wide text-gold">
-            Artesanía y sabor
-          </p>
-          <p className="font-heading text-4xl leading-tight font-light">
-            Cada pedido, preparado con cariño.
-          </p>
-          <p className="text-sm text-primary-foreground/80">
-            Caja, cocina e inventario de la tienda en un solo lugar.
-          </p>
-        </div>
-        <span aria-hidden className="relative text-2xl tracking-[0.5em] text-gold">
-          ···
-        </span>
-      </div>
-
-      <div className="flex items-center justify-center p-6">
-        <div className="flex w-full max-w-sm flex-col gap-8">
+    <main className="login-scope grid min-h-svh bg-background lg:grid-cols-[1.08fr_0.92fr]">
+      {/* Imagen de marca: contiene el logo y la frase promocional. */}
+      <section
+        aria-label="Tus Antojos, tucumanas artesanales"
+        className="relative min-h-[260px] overflow-hidden bg-[#090909] sm:min-h-[350px] lg:min-h-svh"
+      >
+        <picture>
+          <source srcSet="/login-tus-antojos.webp" type="image/webp" />
+          <img
+            src="/login-tus-antojos.png"
+            alt="Tus Antojos: Cada tucumana, un antojo irresistible"
+            className="absolute inset-0 h-full w-full object-cover object-left"
+          />
+        </picture>
+      </section>
+      {/* Formulario: se conserva íntegra la autenticación existente. */}
+      <section className="flex items-center justify-center bg-background px-6 py-12 sm:px-10 lg:px-14">
+        <div className="flex w-full max-w-md flex-col gap-8">
           <div className="flex flex-col items-center gap-3 text-center">
-            <img src="/logo.svg" alt="" className="size-14" />
+            <div className="flex size-20 items-center justify-center overflow-hidden rounded-xl bg-[#111111] p-2">
+              <picture>
+                <source srcSet="/logo1.webp" type="image/webp" />
+                <img
+                  src="/logo1.png"
+                  alt="Tus Antojos - Tucumanas"
+                  className="h-full w-full object-contain"
+                />
+              </picture>
+            </div>
             <div className="flex flex-col gap-1">
-              <p className="eyebrow">Tus Antojos · Punto de venta y gestión</p>
+              <p className="eyebrow text-muted-foreground">Punto de venta y gestión</p>
               <h1 className="page-title">Iniciar sesión</h1>
             </div>
             <span aria-hidden className="block h-0.5 w-12 bg-primary" />
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Ingresa a tu cuenta para continuar.
+            </p>
           </div>
           <form onSubmit={onSubmit} noValidate>
             <FieldGroup>
@@ -95,11 +93,12 @@ export function LoginPage() {
                 </div>
               )}
               <Field data-invalid={!!errors.email}>
-                <FieldLabel htmlFor="email">Correo</FieldLabel>
+                <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
                 <Input
                   id="email"
                   type="email"
                   autoComplete="username"
+                  placeholder="tu@correo.com"
                   aria-invalid={!!errors.email}
                   {...form.register('email')}
                 />
@@ -111,6 +110,7 @@ export function LoginPage() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
+                  placeholder="Ingresa tu contraseña"
                   aria-invalid={!!errors.password}
                   {...form.register('password')}
                 />
@@ -119,15 +119,16 @@ export function LoginPage() {
               <Button
                 type="submit"
                 size="lg"
-                className="w-full"
+                className="mt-2 w-full"
                 disabled={isSubmitting || status === 'loading'}
               >
                 {isSubmitting ? 'Ingresando…' : 'Iniciar sesión'}
               </Button>
             </FieldGroup>
           </form>
+          <p className="text-center text-xs text-muted-foreground">Tus Antojos · Tucumanas</p>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

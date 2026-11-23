@@ -95,6 +95,25 @@
   --sidebar-ring: #ab0909;
 }
 
+/* Ámbito de estilo independiente para la pantalla de inicio de sesión */
+.login-scope {
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f3f3;
+  --secondary-foreground: #111111;
+  --muted: #f4f4f4;
+  --muted-foreground: #737373;
+  --accent: #eeeeee;
+  --accent-foreground: #111111;
+  --gold: #f59e0b;
+  --gold-foreground: #111111;
+  --destructive: #b42318;
+  --border: #e5e5e5;
+  --input: #d4d4d4;
+  --ring: #737373;
+  --radius: 0.5rem;
+}
+
 .dark {
   --background: #1a1513;
   --foreground: #f5efe9;
@@ -131,7 +150,7 @@
   --sidebar-ring: #e0483f;
 }
 
-/* Título de pantalla: mayúsculas espaciadas, como los rótulos de una vitrina. */
+/* Títulos y etiquetas de la identidad visual Tus Antojos. */
 @utility page-title {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
@@ -141,7 +160,7 @@
   letter-spacing: 0.16em;
 }
 
-/* Antetítulo en rojo, ligero, sobre el título. */
+/* Antetítulo neutro, ligero, sobre el título. */
 @utility eyebrow {
   font-family: var(--font-heading);
   font-size: var(--text-sm);
